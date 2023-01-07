@@ -1,0 +1,32 @@
+{
+    "name": "autepos/discount",
+    "description": "Flexible discount interface",
+    "keywords": ["discount", "autepos"],
+    "type": "library",
+    "license": "MIT",
+ "require": {
+        "php": "^8.0"
+    },
+    "require-dev": {
+        "mockery/mockery": "^1.5",
+        "phpunit/phpunit": "9.5",
+        "laravel/pint": "dev-main"
+    },
+    "autoload": {
+        "psr-4": {
+            "Autepos\\Discount\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Autepos\\Discount\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Bethel Osuagwu",
+            "email": "bethel.osuagwu@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
