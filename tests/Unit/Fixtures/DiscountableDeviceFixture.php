@@ -15,21 +15,27 @@ class DiscountableDeviceFixture implements DiscountableDevice
      */
     public array $items = [];
 
+    /**
+     * Create a new discountable device instance.
+     *
+     * @param  int  $id
+     * @param  string|null  $type
+     * @param  int|null  $subtotal If not null, a discountable device line is created with the given subtotal.
+     */
     public function __construct(
         public int $id = 1,
         public ?string $type = null,
-        public int $subtotal = 100000,
-        ?DiscountableDeviceLine $discountableDeviceLine = null
+        ?int $subtotal = null,
     ) {
-        if ($discountableDeviceLine) {
-            $this->items[] = $discountableDeviceLine;
+
+        if (!is_null($subtotal)) {
+            $this->setDiscountableDeviceLines(
+                [new DiscountableDeviceLineFixture(1, null, null, $subtotal)]
+            );
         }
+        
     }
 
-    public function subtotal(): int
-    {
-        return $this->subtotal;
-    }
 
     /**
      * Set discountable device lines.
@@ -65,18 +71,9 @@ class DiscountableDeviceFixture implements DiscountableDevice
     /**
      * {@inheritDoc}
      */
-    public function getDiscountableDeviceLines(?Discountable $discountable = null): array
+    public function getDiscountableDeviceLines(): array
     {
-        if (is_null($discountable)) {
-            return $this->items;
-        }
-
-        return array_filter($this->items, function (DiscountableDeviceLine $item) use ($discountable) {
-            return
-                ($item->getDiscountable()->getDiscountableIdentifier() == $discountable->getDiscountableIdentifier())
-                and
-                ($item->getDiscountable()->getDiscountableType() == $discountable->getDiscountableType());
-        });
+        return $this->items;
     }
 
     /**

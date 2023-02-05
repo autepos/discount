@@ -40,7 +40,7 @@ class DiscountableDeviceLineFixture implements DiscountableDeviceLine
         return $this->discountable;
     }
 
-    public function subtotal(): int
+    public function getDiscountableDeviceLineSubtotal(): int
     {
         return $this->subtotal;
     }

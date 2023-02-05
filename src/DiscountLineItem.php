@@ -27,6 +27,7 @@ class DiscountLineItem
         protected ?int $orderId = null,
         protected int|string|null $userId = null,
         protected int|string|null $adminId = null,
+        protected int|string|null $tenantId = null,
         protected string $processor = ''
     ) {
     }
@@ -119,6 +120,16 @@ class DiscountLineItem
     public function getAdminId(): int|string|null
     {
         return $this->adminId;
+    }
+
+    /**
+     * Get the value of tenantId
+     *
+     * @return int|string|null
+     */
+    public function getTenantId(): int|string|null
+    {
+        return $this->tenantId;
     }
 
     /**

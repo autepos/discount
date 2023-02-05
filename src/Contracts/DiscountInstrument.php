@@ -88,10 +88,15 @@ interface DiscountInstrument
     public function getMinQuantity(): int;
 
     /**
-     * Get the quantity of items that will together as a unit to received one the discount.
-     * E.g. if the unit quantity is 3, then 3 items will be discounted as one unit.
-     * */
-    public function getUnitQuantity(): int;
+     * Get the quantity of items that will together as a unit received one discount.
+     * 
+     * E.g. If there are 7 eligible items, and the unit quantity is 3, then 3 items will 
+     * be discounted as one unit. This means that 2 units (i.e intdiv(7/3)) will be 
+     * discounted and 1 item (i.e 7%3) will not be discounted.
+     * 
+     * @return int|null If null, then the discount is applied to all eligible items as a unit.
+     */
+    public function getUnitQuantity(): int|null;
 
     /**
      * Get the quantity of item that is given for free.

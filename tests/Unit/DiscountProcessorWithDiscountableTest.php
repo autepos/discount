@@ -154,7 +154,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $processor->addDiscountInstrument($discountInstrument);
         $discountLineList = $processor->calculate();
 
-        $this->assertCount(0, $discountLineList);
+        $this->assertCount(0, $discountLineList->filter());
     }
 
     // Test that discount is applied when some of the discountables of
@@ -177,7 +177,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $processor->addDiscountInstrument($discountInstrument);
         $discountLineList = $processor->calculate();
 
-        $this->assertCount(1, $discountLineList);
+        $this->assertCount(1, $discountLineList->filter());
     }
 
     // Test that discount is applied when some of the discountables of
@@ -201,7 +201,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $processor->addDiscountInstrument($discountInstrument);
         $discountLineList = $processor->calculate();
 
-        $this->assertCount(1, $discountLineList);
+        $this->assertCount(1, $discountLineList->filter());
     }
 
     // Test that discount cannot be applied when below unit quantity.
@@ -223,7 +223,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $processor->addDiscountInstrument($discountInstrument);
         $discountLineList = $processor->calculate();
 
-        $this->assertCount(0, $discountLineList);
+        $this->assertCount(0, $discountLineList->filter());
     }
 
     // Test that amount_off discount is applied in groups with size of unit quantity.
@@ -331,7 +331,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $processor->addDiscountInstrument($discountInstrument);
         $discountLineList = $processor->calculate();
 
-        $this->assertCount(4, $discountLineList);
+        $this->assertCount(4, $discountLineList->filter());
         $expected = $discountInstrument->getAmountOff() * 2;
         $actual = $discountLineList->amount();
         $this->assertEquals($expected, $actual);
@@ -356,7 +356,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $processor->addDiscountInstrument($discountInstrument);
         $discountLineList = $processor->calculate();
 
-        $this->assertCount(0, $discountLineList);
+        $this->assertCount(0, $discountLineList->filter());
     }
 
     // Test that buy_n_for_price_of_m discount is applied for a Buy2Get1Free.
@@ -462,16 +462,59 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    // Test that discounts are always applied to remainders.
+    public function testCalculateDiscountsAreAlwaysAppliedToRemainders()
+    {
+        $processor = new BaseDiscountProcessorFixture();
+        $discountable1 = new DiscountableFixture(1, null, 100);
+        $discountable2 = new DiscountableFixture(2, null, 100);
+
+        $discountables = [$discountable1, $discountable2];
+
+        $discountableDevice = new DiscountableDeviceFixture();
+        $discountableDevice->withDiscountables($discountables);
+
+        // Create a product specific percent_off discount
+        $discountInstrument1 = new DiscountInstrumentFixture(1);
+        $discountInstrument1->setDiscountables([$discountable1]);
+        $discountInstrument1->setDiscountType(
+            DiscountTypes::PERCENT_OFF
+        );
+        $discountInstrument1->setPercentOff(50);
+
+        // Create a non-product specific percent_off discount
+        $discountInstrument2 = new DiscountInstrumentFixture(2);
+        $discountInstrument2->setDiscountType(
+            DiscountTypes::PERCENT_OFF
+        );
+        $discountInstrument2->setPercentOff(50);
+        $discountInstrument2->setRestrictionsMinimumAmount(0);
+
+        //
+        $processor->addDiscountableDevice($discountableDevice);
+        $processor->addDiscountInstrument(...[$discountInstrument1 , $discountInstrument2]);
+        $discountLineList = $processor->calculate();
+
+        //$this->assertCount(2, $discountLineList->filter());
+        $expected = 50+75; // And not 50+100.
+        $actual = $discountLineList->amount();
+        
+        $this->assertEquals($expected, $actual);
+
+    }
+
     // Test that discount instrument can be redeemed.
     public function testRedeemDiscountInstrument()
     {
         $order_id = 1;
         $user_id = 'user1';
         $admin_id = 'admin1';
+        $tenant_id = 'tenant1';
         $processor = new BaseDiscountProcessorFixture();
         $processor->setOrderId($order_id);
         $processor->setUserId($user_id);
         $processor->setAdminId($admin_id);
+        $processor->setTenantId($tenant_id);
 
         $discountable = new DiscountableFixture();
 
@@ -494,9 +537,9 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $expected = $discountInstrumentPartialMock->getAmountOff();
         $discountInstrumentPartialMock->shouldReceive('redeem')
             ->withArgs(
-                function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $order_id, $user_id, $admin_id, $processor) {
+                function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $order_id, $user_id, $admin_id, $tenant_id, $processor) {
                     $this->assertEquals($expected, $discountLineItem->getAmount());
-                    $this->assertEquals('1_0', $discountLineItem->getUnitQuantityGroup());
+                    $this->assertEquals('1_of_1', $discountLineItem->getUnitQuantityGroup());
                     $this->assertEquals($discountableDevice, $discountLineItem->getDiscountLine()->getDiscountableDevice());
                     $this->assertEquals(
                         $discountableDevice->getDiscountableDeviceLines()[0],
@@ -505,6 +548,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
                     $this->assertEquals($order_id, $discountLineItem->getOrderId());
                     $this->assertEquals($user_id, $discountLineItem->getUserId());
                     $this->assertEquals($admin_id, $discountLineItem->getAdminId());
+                    $this->assertEquals($tenant_id, $discountLineItem->getTenantId());
                     $this->assertEquals($processor->getProcessor(), $discountLineItem->getProcessor());
 
                     return true;

@@ -10,7 +10,8 @@
     "require-dev": {
         "mockery/mockery": "^1.5",
         "phpunit/phpunit": "9.5",
-        "laravel/pint": "dev-main"
+        "laravel/pint": "dev-main",
+        "symfony/var-dumper": "6.0.x-dev"
     },
     "autoload": {
         "psr-4": {

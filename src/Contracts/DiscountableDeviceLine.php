@@ -24,8 +24,9 @@ interface DiscountableDeviceLine
 
     /**
      * The subtotal of a discountable device.
-     *
+     * This is the amount that will be discounted so should be a line item subtotal 
+     * before discount and tax.
      * @return int
      */
-    public function subtotal(): int;
+    public function getDiscountableDeviceLineSubtotal(): int;
 }

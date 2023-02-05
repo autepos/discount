@@ -36,5 +36,6 @@ class LinearDiscountProcessor extends DiscountProcessor
         });
 
         $this->discountInstruments = array_reverse($this->discountInstruments);
+
     }
 }

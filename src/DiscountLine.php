@@ -8,6 +8,8 @@ use Autepos\Discount\Contracts\DiscountInstrument;
 
 class DiscountLine
 {
+
+    
     /**
      * @var array<int,DiscountLineItem>
      */
@@ -34,6 +36,7 @@ class DiscountLine
             ?int $order_id = null,
             int|string|null $user_id = null,
             int|string|null $admin_id = null,
+            int|string|null $tenant_id = null,
             string $processor = ''
         ): void {
         $this->items[] = new DiscountLineItem(
@@ -44,8 +47,17 @@ class DiscountLine
             $order_id,
             $user_id,
             $admin_id,
+            $tenant_id,
             $processor
         );
+    }
+
+    /**
+     * Check if the discount line has no line items.
+     */
+    public function isEmpty(): bool
+    {
+        return count($this->items) == 0;
     }
 
     /**
@@ -64,13 +76,43 @@ class DiscountLine
     }
 
     /**
+     * Check if the discount line has a discountable device line.
+     */
+    public function hasDiscountableDeviceLine(): bool
+    {
+        return ! is_null($this->discountableDeviceLine);
+    }
+
+    /**
+     * Check if subtotal can be called.
+     */
+    public function canSubtotal(): bool
+    {
+        return $this->hasDiscountableDeviceLine();
+    }
+
+    /**
+     * Check if remainder can be called.
+     */
+    public function canRemainder(): bool
+    {
+        return $this->hasDiscountableDeviceLine();
+    }
+
+    /**
      * The original subtotal on which discount is applied.
      *
      * @return int
+     * @throws \Exception When discountable device line is not set.
      */
     public function subtotal(): int
     {
-        return $this->discountableDeviceLine?->subtotal() ?? $this->discountableDevice->subtotal();
+        // Total cannot be called when discountable device line is not set.
+        if (!$this->hasDiscountableDeviceLine()) {
+            throw new \Exception('Discountable device line is not set. A discount line must have a discountable device line before subtotal can be called.');
+        }
+
+        return $this->discountableDeviceLine->getDiscountableDeviceLineSubtotal();
     }
 
     /**
@@ -78,10 +120,16 @@ class DiscountLine
      * discounts that has already been added. The range is >=0.
      *
      * @return int
+     * @throws \Exception When discountable device line is not set.
      */
     public function remainder(): int
     {
-        return  max($this->subtotal() - $this->amount(), 0);
+        
+
+        return  max(
+                    $this->subtotal() - $this->amount(), 
+                    0
+                );
     }
 
     /**
@@ -160,4 +208,6 @@ class DiscountLine
     {
         return $this->items;
     }
+
+   
 }

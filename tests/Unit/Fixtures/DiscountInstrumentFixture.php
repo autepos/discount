@@ -155,7 +155,7 @@ class DiscountInstrumentFixture implements DiscountInstrument
         return $this->min_quantity;
     }
 
-    public function getUnitQuantity(): int
+    public function getUnitQuantity(): int|null
     {
         return $this->unit_quantity;
     }
