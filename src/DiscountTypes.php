@@ -40,18 +40,18 @@ final class DiscountTypes
      *
      * @param  string  $type
      * @return bool
+     *
      * @throws \InvalidArgumentException If the discount type is invalid.
      */
     public static function isAbsolute(string $type): bool
     {
-        
         switch ($type) {
             case static::AMOUNT_OFF:
             case static::BUY_N_FOR_PRICE_OF_M:
             case static::BUY_N_FOR_PRICE:
                 return true;
             case static::PERCENT_OFF:
-                return false;                
+                return false;
             default:
                 throw new \InvalidArgumentException("Invalid discount type: {$type}");
         }

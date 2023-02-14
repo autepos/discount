@@ -6,7 +6,6 @@ namespace Autepos\Discount\Tests\Unit\Fixtures;
 
 use Autepos\Discount\Contracts\Discountable;
 use Autepos\Discount\Contracts\DiscountableDevice;
-use Autepos\Discount\Contracts\DiscountableDeviceLine;
 
 class DiscountableDeviceFixture implements DiscountableDevice
 {
@@ -27,15 +26,12 @@ class DiscountableDeviceFixture implements DiscountableDevice
         public ?string $type = null,
         ?int $subtotal = null,
     ) {
-
-        if (!is_null($subtotal)) {
+        if (! is_null($subtotal)) {
             $this->setDiscountableDeviceLines(
                 [new DiscountableDeviceLineFixture(1, null, null, $subtotal)]
             );
         }
-        
     }
-
 
     /**
      * Set discountable device lines.

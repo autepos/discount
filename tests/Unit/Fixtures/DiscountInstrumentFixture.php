@@ -33,6 +33,8 @@ class DiscountInstrumentFixture implements DiscountInstrument
 
     public int $min_quantity = 1;
 
+    public ?int $max_quantity = null;
+
     public int $unit_quantity = 1;
 
     public ?int $free_quantity = null;
@@ -155,6 +157,11 @@ class DiscountInstrumentFixture implements DiscountInstrument
         return $this->min_quantity;
     }
 
+    public function getMaxQuantity(): int|null
+    {
+        return $this->max_quantity;
+    }
+
     public function getUnitQuantity(): int|null
     {
         return $this->unit_quantity;
@@ -253,6 +260,13 @@ class DiscountInstrumentFixture implements DiscountInstrument
     public function setMinQuantity(int $min_quantity): self
     {
         $this->min_quantity = $min_quantity;
+
+        return $this;
+    }
+
+    public function setMaxQuantity(?int $max_quantity = null): self
+    {
+        $this->max_quantity = $max_quantity;
 
         return $this;
     }

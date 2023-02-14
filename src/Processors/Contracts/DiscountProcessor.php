@@ -35,13 +35,11 @@ abstract class DiscountProcessor
 
     /**
      * ID of the underlying order/invoice.
-     *
      */
     protected int|string|null $orderId;
 
     /**
      * ID of discount beneficiary.
-     *
      */
     protected int|string|null $userId;
 
@@ -80,7 +78,7 @@ abstract class DiscountProcessor
         $this->orderId = $orderId;
         $this->userId = $userId;
         $this->adminId = $adminId;
-        $this->tenantId= $tenantId;
+        $this->tenantId = $tenantId;
 
         // set discountable device if provided
         if (! is_null($discountableDevice)) {
@@ -134,7 +132,6 @@ abstract class DiscountProcessor
 
     /**
      * Set the value of orderId
-     *
      */
     final public function setOrderId(int|string|null $orderId): static
     {
@@ -169,6 +166,7 @@ abstract class DiscountProcessor
 
     /**
      * Set the value of tenantId
+     *
      * @param  int|string|null  $tenantId
      */
     final public function setTenantId(int|string|null $tenantId): static
@@ -294,7 +292,6 @@ abstract class DiscountProcessor
 
     /**
      * Scan a discount instrument against a discountable device.
-     *
      */
     protected function scan(DiscountInstrument $discountInstrument, DiscountableDevice $discountableDevice): void
     {
@@ -302,18 +299,18 @@ abstract class DiscountProcessor
 
         // If there are no discountables associated to the discount instrument, then
         // the discount instrument is applied to all discountable device lines. Otherwise
-        // the discount instrument is applied to discountable device lines with an 
+        // the discount instrument is applied to discountable device lines with an
         // applicable discountable.
         if (empty($instrumentDiscountables)) {
-            // Enforce minimum amount. This only makes sense when discount is not specific 
+            // Enforce minimum amount. This only makes sense when discount is not specific
             // to a discountable as it is the case here.
             if ($this->totalAmountFor($discountableDevice) < $discountInstrument->getRestrictionsMinimumAmount()) {
                 return;
             }
 
             //
-            $discountableDeviceLines=$discountableDevice->getDiscountableDeviceLines();
-        }else{
+            $discountableDeviceLines = $discountableDevice->getDiscountableDeviceLines();
+        } else {
             // Apply discount to discountable devices' discountable lines with an
             // applicable discountable.
             $discountableDeviceLines = [];
@@ -331,20 +328,26 @@ abstract class DiscountProcessor
         }
 
         // Determine the unit quantity.
-        $unit_quantity=$discountInstrument->getUnitQuantity()??count($discountableDeviceLines);
+        $unit_quantity = $discountInstrument->getUnitQuantity()
+                        ?? $discountInstrument->getMaxQuantity()
+                        ?? count($discountableDeviceLines);
 
         // Apply discount in chunks of the unit quantity
         $discountableDeviceLinesChunks = array_chunk($discountableDeviceLines, $unit_quantity);
-        
+
         // Discard the last chunk if it is not complete
-        if (count($discountableDeviceLinesChunks[count($discountableDeviceLinesChunks)-1]) < $unit_quantity) {
+        if (count($discountableDeviceLinesChunks[count($discountableDeviceLinesChunks) - 1]) < $unit_quantity) {
             array_pop($discountableDeviceLinesChunks);
         }
-
 
         // Return if there are no chunks.
         if (empty($discountableDeviceLinesChunks)) {
             return;
+        }
+
+        // Limit the number of chunks to the maximum quantity.
+        if ($discountInstrument->getMaxQuantity() !== null) {
+            $discountableDeviceLinesChunks = array_slice($discountableDeviceLinesChunks, 0, $discountInstrument->getMaxQuantity());
         }
 
         // Apply discount to chunks.
@@ -355,7 +358,6 @@ abstract class DiscountProcessor
             $counter++;
             $this->apply($discountInstrument, $discountableDevice, $discountableDeviceLinesChunk, $unit_quantity_group);
         }
-
     }
 
     /**
@@ -393,15 +395,14 @@ abstract class DiscountProcessor
 
         //
         $subtotal_remainder = 0;
-        
-            
+
         // Apply the discount to the discountableDeviceLines as a unit/whole.
         switch($discountInstrument->getDiscountType()) {
             case DiscountTypes::AMOUNT_OFF:
             case DiscountTypes::PERCENT_OFF:
                 // Applying the discount as unit/whole.
                 foreach ($discountableDeviceLines as $discountableDeviceLine) {
-                    $discountLine = $this->discountLineList->retrieve($discountableDevice, $discountableDeviceLine);
+                    $discountLine = $this->discountLineList->find($discountableDevice, $discountableDeviceLine);
                     $subtotal_remainder += $discountLine->remainder();
                     $discountLines[] = $discountLine;
                 }
@@ -422,7 +423,7 @@ abstract class DiscountProcessor
                 $remainders = [];
 
                 foreach ($discountableDeviceLines as $discountableDeviceLine) {
-                    $discountLine = $this->discountLineList->retrieve($discountableDevice, $discountableDeviceLine);
+                    $discountLine = $this->discountLineList->find($discountableDevice, $discountableDeviceLine);
                     $remainders[] = $discountLine->remainder();
                     $discountLines[] = $discountLine;
                 }
@@ -450,7 +451,7 @@ abstract class DiscountProcessor
                 $remainders = [];
 
                 foreach ($discountableDeviceLines as $discountableDeviceLine) {
-                    $discountLine = $this->discountLineList->retrieve($discountableDevice, $discountableDeviceLine);
+                    $discountLine = $this->discountLineList->find($discountableDevice, $discountableDeviceLine);
                     $remainders[] = $discountLine->remainder();
                     $discountLines[] = $discountLine;
                 }
@@ -467,7 +468,6 @@ abstract class DiscountProcessor
             default:
                 throw new \InvalidArgumentException('Invalid discount type.');
         }
-    
 
         // Record the discount
         foreach ($discountLines as $discountLine) {
@@ -492,7 +492,7 @@ abstract class DiscountProcessor
     protected function populateDiscountLines(DiscountableDevice $discountableDevice): void
     {
         foreach ($discountableDevice->getDiscountableDeviceLines() as $discountableDeviceLine) {
-            $this->discountLineList->retrieveOrAdd($discountableDevice, $discountableDeviceLine);
+            $this->discountLineList->findOrAdd($discountableDevice, $discountableDeviceLine);
         }
     }
 
@@ -502,9 +502,10 @@ abstract class DiscountProcessor
      * @param  DiscountableDevice  $discountableDevice
      * @param  Discountable|null  $discountable When not null only the items that has the given discountable are returned.
      * @return array<int,DiscountableDeviceLine>
+     *
      * @throws \InvalidArgumentException When discountable device lines are not of type DiscountableDeviceLine.
      */
-    private function discountableDeviceLinesFor(DiscountableDevice $discountableDevice,?Discountable $discountable = null): array
+    private function discountableDeviceLinesFor(DiscountableDevice $discountableDevice, ?Discountable $discountable = null): array
     {
         $discountableDeviceLine = $discountableDevice->getDiscountableDeviceLines();
 
@@ -531,9 +532,8 @@ abstract class DiscountProcessor
         });
     }
 
-    /** 
+    /**
      * Get registered discount lines.
-     * 
      */
     protected function discountLinesFor(DiscountableDevice $discountableDevice): DiscountLineList
     {
@@ -554,10 +554,9 @@ abstract class DiscountProcessor
         foreach ($discountableDevice->getDiscountableDeviceLines() as $discountableDeviceLine) {
             $subtotal += $discountableDeviceLine->getDiscountableDeviceLineSubtotal();
         }
+
         return $subtotal;
-        
     }
-    
 
     /**
      * Share an amount into $count places and return each share as array.
@@ -592,7 +591,7 @@ abstract class DiscountProcessor
         // Get remainder of each discount line
         $remainders = [];
         foreach ($discountLines as $discountLine) {
-            $remainders[$discountLine->getHash()] =  $discountLine->remainder();
+            $remainders[$discountLine->getHash()] = $discountLine->remainder();
         }
 
         //
@@ -606,12 +605,13 @@ abstract class DiscountProcessor
     }
 
     /**
-     * Determine the actual amount that will be discounted for amount_off and 
+     * Determine the actual amount that will be discounted for amount_off and
      * percent_off discount types.
      *
      * @param  int  $subtotal
      * @param  DiscountInstrument  $discountInstrument
      * @return int
+     *
      * @throws \InvalidArgumentException When discount type is not supported.
      */
     protected function off(int $subtotal, DiscountInstrument $discountInstrument): int
@@ -651,7 +651,9 @@ abstract class DiscountProcessor
         /**
          * Precision is not necessary.
          */
-        return floor($instrument->getPercentOff() * $subtotal) / 100;
+        $off = floor($instrument->getPercentOff() * $subtotal) / 100;
+
+        return min($off, $subtotal);
     }
 
     /**
@@ -686,7 +688,6 @@ abstract class DiscountProcessor
 
     /**
      * Get the value of orderId
-     *
      */
     public function getOrderId(): int|string|null
     {

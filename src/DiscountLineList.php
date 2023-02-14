@@ -5,6 +5,7 @@ namespace Autepos\Discount;
 use ArrayIterator;
 use Autepos\Discount\Contracts\DiscountableDevice;
 use Autepos\Discount\Contracts\DiscountableDeviceLine;
+use Autepos\Discount\Contracts\DiscountInstrument;
 use Countable;
 use IteratorAggregate;
 use Traversable;
@@ -41,8 +42,21 @@ class DiscountLineList implements IteratorAggregate, Countable
         return array_key_exists($key, $this->items);
     }
 
+    /**
+     * Add a discount line to the collection.
+     *
+     * @param  DiscountLine  $discountLine
+     * @return void
+     *
+     * @throws \InvalidArgumentException
+     */
     public function add(DiscountLine $discountLine): void
     {
+        // If the discount line already exists, throw an exception.
+        if ($this->has($discountLine->getHash())) {
+            throw new \InvalidArgumentException('Discount line with hash, "'.$discountLine->getHash().'" already exists.');
+        }
+
         $this->items[$discountLine->getHash()] = $discountLine;
     }
 
@@ -51,14 +65,14 @@ class DiscountLineList implements IteratorAggregate, Countable
         return $this->items[$key];
     }
 
-        /**
-     * Retrieve a discount line. 
+    /**
+     * find a discount line.
      *
      * @param  DiscountableDevice  $discountableDevice
      * @param  DiscountableDeviceLine|null  $discountableDeviceLine
      * @return DiscountLine|null
      */
-    public function retrieve(DiscountableDevice $discountableDevice, ?DiscountableDeviceLine $discountableDeviceLine = null)
+    public function find(DiscountableDevice $discountableDevice, ?DiscountableDeviceLine $discountableDeviceLine = null)
     {
         $key = DiscountLine::makeHash($discountableDevice, $discountableDeviceLine);
         if (! $this->has($key)) {
@@ -68,28 +82,26 @@ class DiscountLineList implements IteratorAggregate, Countable
         return $this->get($key);
     }
 
-
     /**
-     * Retrieve or add a discount line. Tries to find a discount line with the
+     * find or add a discount line. Tries to find a discount line with the
      * same hash. If not found, creates a new one.
      *
      * @param  DiscountableDevice  $discountableDevice
      * @param  DiscountableDeviceLine|null  $discountableDeviceLine
      * @return DiscountLine
      */
-    public function retrieveOrAdd(DiscountableDevice $discountableDevice, ?DiscountableDeviceLine $discountableDeviceLine = null)
+    public function findOrAdd(DiscountableDevice $discountableDevice, ?DiscountableDeviceLine $discountableDeviceLine = null)
     {
-        // Try to retrieve a discount line 
-        $discountLine=$this->retrieve($discountableDevice, $discountableDeviceLine);
-        if (!is_null($discountLine)) {
+        // Try to find a discount line
+        $discountLine = $this->find($discountableDevice, $discountableDeviceLine);
+        if (! is_null($discountLine)) {
             return $discountLine;
         }
 
-        $key = DiscountLine::makeHash($discountableDevice, $discountableDeviceLine);
-        $discountLine = new DiscountLine($key, $discountableDevice, $discountableDeviceLine);
+        $discountLine = DiscountLine::constructFrom($discountableDevice, $discountableDeviceLine);
         $this->add($discountLine);
 
-        return $this->get($key);
+        return $this->get($discountLine->getHash());
     }
 
     /**
@@ -115,16 +127,20 @@ class DiscountLineList implements IteratorAggregate, Countable
     }
 
     /**
-     * Prune all items with zero amount mutating the collection instance.
+     * Prune all items with zero amount mutating the collection instance in place.
+     *
+     * @return static $this
      */
     public function prune(): static
     {
         $this->items = $this->allWithAmount();
+
         return $this;
     }
 
     /**
-     * Get all items with none-zero amount as a new instance of the collection.
+     * Get all items with none-zero amount as a new instance of the
+     * collection (i.e the current instance is not mutated).
      *
      * @return DiscountLineList
      */
@@ -137,6 +153,7 @@ class DiscountLineList implements IteratorAggregate, Countable
 
         return $collection;
     }
+
     /**
      * Get all non-empty items as an array. An empty item is an item without
      * a discount line item.
@@ -146,9 +163,10 @@ class DiscountLineList implements IteratorAggregate, Countable
     public function allNonEmpty(): array
     {
         return array_filter($this->all(), function (DiscountLine $discountLine) {
-            return !$discountLine->isEmpty();
+            return ! $discountLine->isEmpty();
         });
     }
+
     /**
      * Get all non-empty items (i.e. items with at least 1 discount line item).
      *
@@ -166,18 +184,17 @@ class DiscountLineList implements IteratorAggregate, Countable
 
     /**
      * Filter items by a callback and returns a new instance. if no callback
-     * is provided, all empty (i.e. items without a discount line item) will 
+     * is provided, all empty (i.e. items without a discount line item) will
      * be filtered out.
-     * 
      */
-    public function filter(?callable $callback=null): static
+    public function filter(?callable $callback = null): static
     {
         if (is_null($callback)) {
             return $this->allNonEmptyAsCollection();
         }
 
         $items = array_filter($this->items, $callback);
-        
+
         $collection = new DiscountLineList();
         foreach ($items as $discountLine) {
             $collection->add($discountLine);
@@ -185,8 +202,6 @@ class DiscountLineList implements IteratorAggregate, Countable
 
         return $collection;
     }
-    
-    
 
     /**
      * Persists the discounts.
@@ -219,6 +234,51 @@ class DiscountLineList implements IteratorAggregate, Countable
     }
 
     /**
+     * Group items by discount instrument.
+     *
+     * @return array<mixed,array<DiscountLine>> The key is the discount instrument identifier.
+     */
+    public function groupByDiscountInstrumentAsArray(): array
+    {
+        $discountLines = [];
+        foreach ($this->items as $item) {
+            foreach ($item->groupByDiscountInstrument() as $discountLine) {
+                $discountLineItems = $discountLine->getItems();
+                if (count($discountLineItems) === 0) {
+                    continue;
+                }
+                $discountInstrument = $discountLineItems[0]->getDiscountInstrument();
+                $key = $discountInstrument->getDiscountInstrumentIdentifier();
+                $discountLines[$key][] = $discountLine;
+            }
+        }
+
+        return $discountLines;
+    }
+
+    /**
+     * Group items amount by discount instrument.
+     *
+     * @return array<mixed,int> The key is the discount instrument identifier.
+     */
+    public function groupAmountByDiscountInstrument(): array
+    {
+        $groupedAmounts = [];
+
+        foreach ($this->groupByDiscountInstrumentAsArray() as $discountInstrumentIdentifier => $discountLines) {
+            foreach ($discountLines as $discountLine) {
+                if (! array_key_exists($discountInstrumentIdentifier, $groupedAmounts)) {
+                    $groupedAmounts[$discountInstrumentIdentifier] = 0;
+                }
+
+                $groupedAmounts[$discountInstrumentIdentifier] += $discountLine->amount();
+            }
+        }
+
+        return $groupedAmounts;
+    }
+
+    /**
      * Get the total discount amount.
      *
      * @return int
@@ -231,5 +291,26 @@ class DiscountLineList implements IteratorAggregate, Countable
         }
 
         return $amount;
+    }
+
+    /**
+     * Get the total discount amount for a discount instrument.
+     */
+    public function amountForDiscountInstrument(DiscountInstrument $discountInstrument): int
+    {
+        $amount = 0;
+        foreach ($this->items as $item) {
+            $amount += $item->amountForDiscountInstrument($discountInstrument);
+        }
+
+        return $amount;
+    }
+
+    /**
+     * Get the total discount for a given discountableDevice and discountableDeviceLine.
+     */
+    public function amountFor(DiscountableDevice $discountableDevice, ?DiscountableDeviceLine $discountableDeviceLine = null): int
+    {
+        return $this->find($discountableDevice, $discountableDeviceLine)?->amount() ?? 0;
     }
 }

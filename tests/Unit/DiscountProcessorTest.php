@@ -92,7 +92,7 @@ class DiscountProcessorTest extends TestCase
     public function testCalculateAmountOffDiscount()
     {
         $processor = new BaseDiscountProcessorFixture();
-        $discountableDevice = new DiscountableDeviceFixture(1,null,1000);
+        $discountableDevice = new DiscountableDeviceFixture(1, null, 1000);
         $discountInstrument = new DiscountInstrumentFixture();
         $processor->addDiscountableDevice($discountableDevice);
         $processor->addDiscountInstrument($discountInstrument);
@@ -106,9 +106,9 @@ class DiscountProcessorTest extends TestCase
     // Test that percent_off discount can be calculated
     public function testCalculatePercentOffDiscount()
     {
-        $subtotal=1000;
+        $subtotal = 1000;
         $processor = new BaseDiscountProcessorFixture();
-        $discountableDevice = new DiscountableDeviceFixture(1,null,$subtotal);
+        $discountableDevice = new DiscountableDeviceFixture(1, null, $subtotal);
         $discountInstrument = new DiscountInstrumentFixture();
         $discountInstrument->setDiscountType(
             DiscountTypes::PERCENT_OFF
@@ -127,11 +127,11 @@ class DiscountProcessorTest extends TestCase
     // Test that discount can be calculated for multiple discountable devices
     public function testCalculateMultipleDiscountableDevices()
     {
-        $device1_subtotal=1000;
-        $device2_subtotal=2000;
+        $device1_subtotal = 1000;
+        $device2_subtotal = 2000;
         $processor = new BaseDiscountProcessorFixture();
-        $discountableDevice1 = new DiscountableDeviceFixture(1,null,$device1_subtotal);
-        $discountableDevice2 = new DiscountableDeviceFixture(2,null,$device2_subtotal);
+        $discountableDevice1 = new DiscountableDeviceFixture(1, null, $device1_subtotal);
+        $discountableDevice2 = new DiscountableDeviceFixture(2, null, $device2_subtotal);
         $discountInstrument = new DiscountInstrumentFixture();
         $discountInstrument->setDiscountType(
             DiscountTypes::PERCENT_OFF
@@ -153,9 +153,9 @@ class DiscountProcessorTest extends TestCase
     // Test that discount can be calculated for multiple discount instruments
     public function testCalculateMultipleDiscountInstruments()
     {
-        $subtotal=1000;
+        $subtotal = 1000;
         $processor = new BaseDiscountProcessorFixture();
-        $discountableDevice = new DiscountableDeviceFixture(1,null,$subtotal);
+        $discountableDevice = new DiscountableDeviceFixture(1, null, $subtotal);
         $discountInstrument1 = new DiscountInstrumentFixture();
 
         $discountInstrument2 = new DiscountInstrumentFixture();
@@ -187,11 +187,11 @@ class DiscountProcessorTest extends TestCase
     // Test that discount can be calculated for multiple discount instruments and multiple discountable devices
     public function testCalculateMultipleDiscountInstrumentsAndMultipleDiscountableDevices()
     {
-        $device1_subtotal=1000;
-        $device2_subtotal=2000;
+        $device1_subtotal = 1000;
+        $device2_subtotal = 2000;
         $processor = new BaseDiscountProcessorFixture();
-        $discountableDevice1 = new DiscountableDeviceFixture(1,null,$device1_subtotal);
-        $discountableDevice2 = new DiscountableDeviceFixture(2,null,$device2_subtotal);
+        $discountableDevice1 = new DiscountableDeviceFixture(1, null, $device1_subtotal);
+        $discountableDevice2 = new DiscountableDeviceFixture(2, null, $device2_subtotal);
         $discountInstrument1 = new DiscountInstrumentFixture(1);
 
         $discountInstrument2 = new DiscountInstrumentFixture(2);
@@ -233,7 +233,7 @@ class DiscountProcessorTest extends TestCase
     // Test that discount cannot be applied to a discountable device with subtotal less than the minimum amount
     public function testCalculateDiscountableDeviceSubtotalLessThanMinimumAmount()
     {
-        $subtotal=1000;
+        $subtotal = 1000;
         $processor = new BaseDiscountProcessorFixture();
         $discountableDevice = new DiscountableDeviceFixture($subtotal);
         $discountInstrument = new DiscountInstrumentFixture();
@@ -294,15 +294,35 @@ class DiscountProcessorTest extends TestCase
         $this->assertCount(0, $discountLineList);
     }
 
-    // Test that discount amount is less than or equal to discountable device subtotal.
-    public function testCalculateDiscountAmountLessThanOrEqualToDiscountableDeviceSubtotal()
+    // Test that discount amount is not greater than discountable device subtotal for amount_off.
+    public function testAmountoffDiscountAmountIsNotGreaterThanSubtotal()
     {
-        $subtotal=1000;
+        $subtotal = 1000;
         $processor = new BaseDiscountProcessorFixture();
-        $discountableDevice = new DiscountableDeviceFixture(1,null,$subtotal);
+        $discountableDevice = new DiscountableDeviceFixture(1, null, $subtotal);
         $discountInstrument = new DiscountInstrumentFixture();
 
         $discountInstrument->setAmountOff($subtotal + 1);
+        $processor->addDiscountableDevice($discountableDevice);
+        $processor->addDiscountInstrument($discountInstrument);
+        $discountLineList = $processor->calculate();
+
+        $this->assertCount(1, $discountLineList);
+        $this->assertEquals($subtotal, $discountLineList->amount());
+    }
+
+    // Test that discount amount is not greater than discountable device subtotal for percent_off.
+    public function testPercentoffDiscountAmountIsNotGreaterThanSubtotal()
+    {
+        $subtotal = 1000;
+        $processor = new BaseDiscountProcessorFixture();
+        $discountableDevice = new DiscountableDeviceFixture(1, null, $subtotal);
+        $discountInstrument = new DiscountInstrumentFixture();
+
+        $discountInstrument->setDiscountType(
+            DiscountTypes::PERCENT_OFF
+        );
+        $discountInstrument->setPercentOff(100 + 10);
         $processor->addDiscountableDevice($discountableDevice);
         $processor->addDiscountInstrument($discountInstrument);
         $discountLineList = $processor->calculate();
@@ -323,7 +343,6 @@ class DiscountProcessorTest extends TestCase
         $processor->setUserId($user_id);
         $processor->setAdminId($admin_id);
         $processor->setTenantId($tenant_id);
-        
 
         $discountableDevice = new DiscountableDeviceFixture(1, null, 1000);
 
@@ -340,6 +359,7 @@ class DiscountProcessorTest extends TestCase
 
         //
         $discountInstrumentPartialMock->shouldReceive('redeem')
+            ->once()
             ->withArgs(
                 function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $order_id, $user_id, $admin_id, $tenant_id, $processor) {
                     $this->assertEquals($expected, $discountLineItem->getAmount());
@@ -354,7 +374,7 @@ class DiscountProcessorTest extends TestCase
                     $this->assertEquals($admin_id, $discountLineItem->getAdminId());
                     $this->assertEquals($tenant_id, $discountLineItem->getTenantId());
                     $this->assertEquals($processor->getProcessor(), $discountLineItem->getProcessor());
-                    
+
                     return true;
                 }
             )

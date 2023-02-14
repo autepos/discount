@@ -82,18 +82,27 @@ interface DiscountInstrument
 
     /**
      * Get the minimum quantity required.
-     * E.g. if the minimum quantity is 6, then the discount will be applied to if
+     * E.g. if the minimum quantity is 6, then the discount will be applied only if
      * there are at least 6 eligible items.
      * */
     public function getMinQuantity(): int;
 
     /**
+     * Get the maximum quantity.
+     * E.g. if the maximum quantity is 6, then the discount will be applied only
+     * to 6 of all eligible items.
+     *
+     * @return int|null If null, then there is no maximum quantity.
+     */
+    public function getMaxQuantity(): int|null;
+
+    /**
      * Get the quantity of items that will together as a unit received one discount.
-     * 
-     * E.g. If there are 7 eligible items, and the unit quantity is 3, then 3 items will 
-     * be discounted as one unit. This means that 2 units (i.e intdiv(7/3)) will be 
+     *
+     * E.g. If there are 7 eligible items, and the unit quantity is 3, then 3 items will
+     * be discounted as one unit. This means that 2 units (i.e intdiv(7/3)) will be
      * discounted and 1 item (i.e 7%3) will not be discounted.
-     * 
+     *
      * @return int|null If null, then the discount is applied to all eligible items as a unit.
      */
     public function getUnitQuantity(): int|null;

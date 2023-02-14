@@ -226,6 +226,47 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $this->assertCount(0, $discountLineList->filter());
     }
 
+    // Test that discount is applied up to max quantity.
+    public function testCalculateDiscountWithMaxQuantity()
+    {
+        $processor = new BaseDiscountProcessorFixture();
+
+        $discountable1 = new DiscountableFixture(1);
+        $discountable2 = new DiscountableFixture(2);
+        $discountable3 = new DiscountableFixture(3);
+        $discountable4 = new DiscountableFixture(4);
+        $discountable5 = new DiscountableFixture(5);
+        $discountable6 = new DiscountableFixture(6);
+
+        $discountableDevice = new DiscountableDeviceFixture();
+        $discountableDevice->withDiscountables([
+            $discountable1,
+            $discountable2,
+            $discountable3,
+            $discountable4,
+            $discountable5,
+            $discountable6,
+        ]);
+
+        $discountInstrument = new DiscountInstrumentFixture();
+        $discountInstrument->setDiscountables([
+            $discountable1,
+            $discountable2,
+            $discountable3,
+            $discountable4,
+            $discountable5,
+            $discountable6,
+        ]);
+        $discountInstrument->setUnitQuantity(2);
+        $discountInstrument->setMaxQuantity(2);
+
+        $processor->addDiscountableDevice($discountableDevice);
+        $processor->addDiscountInstrument($discountInstrument);
+        $discountLineList = $processor->calculate();
+
+        $this->assertCount(4, $discountLineList->filter());
+    }
+
     // Test that amount_off discount is applied in groups with size of unit quantity.
     public function testCalculateAmountOffDiscountWithUnitQuantity()
     {
@@ -492,15 +533,14 @@ class DiscountProcessorWithDiscountableTest extends TestCase
 
         //
         $processor->addDiscountableDevice($discountableDevice);
-        $processor->addDiscountInstrument(...[$discountInstrument1 , $discountInstrument2]);
+        $processor->addDiscountInstrument(...[$discountInstrument1, $discountInstrument2]);
         $discountLineList = $processor->calculate();
 
         //$this->assertCount(2, $discountLineList->filter());
-        $expected = 50+75; // And not 50+100.
+        $expected = 50 + 75; // And not 50+100.
         $actual = $discountLineList->amount();
-        
-        $this->assertEquals($expected, $actual);
 
+        $this->assertEquals($expected, $actual);
     }
 
     // Test that discount instrument can be redeemed.
@@ -536,6 +576,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         //
         $expected = $discountInstrumentPartialMock->getAmountOff();
         $discountInstrumentPartialMock->shouldReceive('redeem')
+            ->once()
             ->withArgs(
                 function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $order_id, $user_id, $admin_id, $tenant_id, $processor) {
                     $this->assertEquals($expected, $discountLineItem->getAmount());

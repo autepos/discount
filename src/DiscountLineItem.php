@@ -57,6 +57,16 @@ class DiscountLineItem
     }
 
     /**
+     * Set the value of discountLine
+     */
+    public function setDiscountLine($discountLine): static
+    {
+        $this->discountLine = $discountLine;
+
+        return $this;
+    }
+
+    /**
      * Get the value of discountInstrument
      */
     public function getDiscountInstrument()

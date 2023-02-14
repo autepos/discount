@@ -2,12 +2,12 @@
 
 namespace Autepos\Discount\Tests\Unit\Processors;
 
-use PHPUnit\Framework\TestCase;
 use Autepos\Discount\DiscountTypes;
 use Autepos\Discount\Processors\LinearDiscountProcessor;
 use Autepos\Discount\Tests\Unit\Fixtures\DiscountableDeviceFixture;
-use Autepos\Discount\Tests\Unit\Fixtures\DiscountInstrumentFixture;
 use Autepos\Discount\Tests\Unit\Fixtures\DiscountableDeviceLineFixture;
+use Autepos\Discount\Tests\Unit\Fixtures\DiscountInstrumentFixture;
+use PHPUnit\Framework\TestCase;
 
 class LinearDiscountProcessorTest extends TestCase
 {
@@ -16,7 +16,7 @@ class LinearDiscountProcessorTest extends TestCase
     {
         $linearDiscountProcessor = new LinearDiscountProcessor();
 
-        $subtotal=1000;
+        $subtotal = 1000;
         $discountableDevice = (new DiscountableDeviceFixture(1))
         ->setDiscountableDeviceLines(
             [new DiscountableDeviceLineFixture(1, null, null, $subtotal)]
@@ -48,7 +48,6 @@ class LinearDiscountProcessorTest extends TestCase
         $discountInstrument4 = new DiscountInstrumentFixture();
         $discountInstrument4->setAmountOff(100);
         $linearDiscountProcessor->addDiscountInstrument($discountInstrument4);
-        
 
         // Calculate the discount.
         $discountLineList = $linearDiscountProcessor->calculate();
@@ -56,7 +55,7 @@ class LinearDiscountProcessorTest extends TestCase
         $this->assertCount(1, $discountLineList);
 
         // 1. The amount of the discount should be the sum of the amount off
-        $amount1 = $discountInstrument2->getAmountOff()+$discountInstrument4->getAmountOff();
+        $amount1 = $discountInstrument2->getAmountOff() + $discountInstrument4->getAmountOff();
 
         // 2. The percent offs are applied in the order they are added currently.
         //    So the first percent off discount added should be applied to the remainder
@@ -66,7 +65,6 @@ class LinearDiscountProcessorTest extends TestCase
         // 3. The second percent off discount should be applied to the remainder
         $remainder = $subtotal - $amount1 - $amount2;
         $amount3 = floor($remainder * $discountInstrument3->getPercentOff() / 100);
-
 
         $expected = $amount1 + $amount2 + $amount3;
         $this->assertEquals($expected, $discountLineList->amount());
