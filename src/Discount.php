@@ -1,7 +1,9 @@
 <?php
-namespace Autepos\Discount;
-class Discount{
 
+namespace Autepos\Discount;
+
+class Discount
+{
     /**
      * The version of the package.
      */
