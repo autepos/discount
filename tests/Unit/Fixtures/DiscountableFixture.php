@@ -31,7 +31,7 @@ class DiscountableFixture implements Discountable
         return get_class();
     }
 
-    public function getPrice(): int
+    public function getDiscountableItemPrice(): int
     {
         return $this->price;
     }

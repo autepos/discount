@@ -178,7 +178,7 @@ class DiscountInstrumentFixture implements DiscountInstrument
     /**
      * {@inheritDoc}
      */
-    public function getPrice(): int
+    public function getDiscountedPrice(): int
     {
         return $this->price;
     }

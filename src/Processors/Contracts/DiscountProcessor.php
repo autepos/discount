@@ -443,7 +443,7 @@ abstract class DiscountProcessor
                 break;
             case DiscountTypes::BUY_N_FOR_PRICE:
                 // Step 1. Get the remainder of the discountable device lines in an array as $remainders.
-                // Step 2. Then get $discountInstrument->getPrice() to get $new_total_remainder (the amount that must be paid following the discount).
+                // Step 2. Then get $discountInstrument->getDiscountedPrice() to get $new_total_remainder (the amount that must be paid following the discount).
                 // Step 3. Then formulate the discount amount equ as $new_total_remainder =sum($remainders) - $discount_amount. And rearrange to get: $discount_amount=sum($remainders) - $new_total_remainder.
                 // Step 4. Then share the discount amount to the discountable device lines using trickling strategy.
 
@@ -457,7 +457,7 @@ abstract class DiscountProcessor
                 }
 
                 // Step 2.
-                $new_total_remainder = $discountInstrument->getPrice();
+                $new_total_remainder = $discountInstrument->getDiscountedPrice();
 
                 // Step 3.
                 $discount_amount = \max(0, \array_sum($remainders) - $new_total_remainder);

@@ -119,7 +119,7 @@ interface DiscountInstrument
      * E.g. if the unit quantity is 3, then p2500 needs to be paid, for a discount of
      * buy 3 for £25.
      */
-    public function getPrice(): int;
+    public function getDiscountedPrice(): int;
 
     public function redeem(DiscountLineItem $discountLineItem): bool;
 }

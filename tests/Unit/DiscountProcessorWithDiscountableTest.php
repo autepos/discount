@@ -67,7 +67,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $discountLineList = $processor->calculate();
 
         $this->assertCount(1, $discountLineList);
-        $expected = $discountable->getPrice() * $discountInstrument->getPercentOff() / 100;
+        $expected = $discountable->getDiscountableItemPrice() * $discountInstrument->getPercentOff() / 100;
         $actual = $discountLineList->amount();
         $this->assertEquals($expected, $actual);
     }
@@ -128,8 +128,8 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $discountLineList = $processor->calculate();
 
         $this->assertCount(2, $discountLineList);
-        $amount1 = $discountables[0]->getPrice() * $discountInstrument->getPercentOff() / 100;
-        $amount2 = $discountables[1]->getPrice() * $discountInstrument->getPercentOff() / 100;
+        $amount1 = $discountables[0]->getDiscountableItemPrice() * $discountInstrument->getPercentOff() / 100;
+        $amount2 = $discountables[1]->getDiscountableItemPrice() * $discountInstrument->getPercentOff() / 100;
         $expected = $amount1 + $amount2;
         $actual = $discountLineList->amount();
         $this->assertEquals($expected, $actual);
@@ -326,8 +326,8 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $discountLineList = $processor->calculate();
 
         $this->assertCount(4, $discountLineList);
-        $amount1 = ($discountable2->getPrice() + $discountable1->getPrice()) * $discountInstrument->getPercentOff() / 100;
-        $amount2 = ($discountable3->getPrice() + $discountable4->getPrice()) * $discountInstrument->getPercentOff() / 100;
+        $amount1 = ($discountable2->getDiscountableItemPrice() + $discountable1->getDiscountableItemPrice()) * $discountInstrument->getPercentOff() / 100;
+        $amount2 = ($discountable3->getDiscountableItemPrice() + $discountable4->getDiscountableItemPrice()) * $discountInstrument->getPercentOff() / 100;
 
         $expected = $amount1 + $amount2;
         $actual = $discountLineList->amount();
@@ -428,7 +428,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $discountLineList = $processor->calculate();
 
         $this->assertCount(2, $discountLineList);
-        $expected = $discountable1->getPrice(); //The savings is the price of the least expensive item.
+        $expected = $discountable1->getDiscountableItemPrice(); //The savings is the price of the least expensive item.
         $actual = $discountLineList->amount();
         $this->assertEquals($expected, $actual);
     }
@@ -462,7 +462,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $discountLineList = $processor->calculate();
 
         $this->assertCount(3, $discountLineList);
-        $expected = $discountable1->getPrice() * 2; //The savings is the price of the least expensive item times 2.
+        $expected = $discountable1->getDiscountableItemPrice() * 2; //The savings is the price of the least expensive item times 2.
         $actual = $discountLineList->amount();
         $this->assertEquals($expected, $actual);
     }
@@ -498,7 +498,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $discountLineList = $processor->calculate();
 
         $this->assertCount(3, $discountLineList);
-        $expected = $discountable1->getPrice() + $discountable2->getPrice() + $discountable3->getPrice() - $priceToPay;
+        $expected = $discountable1->getDiscountableItemPrice() + $discountable2->getDiscountableItemPrice() + $discountable3->getDiscountableItemPrice() - $priceToPay;
         $actual = $discountLineList->amount();
         $this->assertEquals($expected, $actual);
     }

@@ -20,5 +20,5 @@ interface Discountable
      *
      * @return int
      */
-    public function getPrice(): int;
+    public function getDiscountableItemPrice(): int;
 }

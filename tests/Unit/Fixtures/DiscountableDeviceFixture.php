@@ -57,7 +57,7 @@ class DiscountableDeviceFixture implements DiscountableDevice
                 100 + $discountable->getDiscountableIdentifier(), // Just borrow the id from the discountable
                 null,
                 $discountable,
-                $discountable->getPrice()
+                $discountable->getDiscountableItemPrice()
             );
         }
 
