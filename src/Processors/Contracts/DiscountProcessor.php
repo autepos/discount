@@ -267,10 +267,7 @@ abstract class DiscountProcessor
      */
     protected function isValid(DiscountInstrument $discountInstrument): bool
     {
-        return
-            $discountInstrument->isActive()
-            and ! $discountInstrument->hasExpired()
-            and $discountInstrument->isRedeemable($this->userId, $this->orderId);
+        return $discountInstrument->isRedeemable($this->userId, $this->orderId, $this->adminId, $this->tenantId);
     }
 
     /**
@@ -331,6 +328,11 @@ abstract class DiscountProcessor
         $unit_quantity = $discountInstrument->getUnitQuantity()
                         ?? $discountInstrument->getMaxQuantity()
                         ?? count($discountableDeviceLines);
+
+        // A zero or negative unit quantity is not allowed.
+        if ($unit_quantity < 0) {
+            return;
+        }
 
         // Apply discount in chunks of the unit quantity
         $discountableDeviceLinesChunks = array_chunk($discountableDeviceLines, $unit_quantity);

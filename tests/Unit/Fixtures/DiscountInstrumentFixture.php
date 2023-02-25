@@ -23,11 +23,7 @@ class DiscountInstrumentFixture implements DiscountInstrument
 
     public int $percent_off = 0;
 
-    public bool $is_active = true;
-
     public bool $is_redeemable = true;
-
-    public bool $has_expired = false;
 
     public int $restrictions_minimum_amount = 1000;
 
@@ -39,7 +35,7 @@ class DiscountInstrumentFixture implements DiscountInstrument
 
     public ?int $free_quantity = null;
 
-    public ?int $price = null;
+    public int $discounted_price;
 
     public bool $redeem_succeeded = true;
 
@@ -124,22 +120,13 @@ class DiscountInstrumentFixture implements DiscountInstrument
         return $this->percent_off;
     }
 
-    /**
-     * Check if discount instrument is valid
-     */
-    public function isActive(): bool
-    {
-        return $this->is_active;
-    }
-
-    public function isRedeemable(string|int $user_id = null, int $order_id = null): bool
+    public function isRedeemable(
+        int|string $user_id = null,
+        int|string $order_id = null,
+        int|string $admin_id = null,
+        int|string $tenant_id = null): bool
     {
         return $this->is_redeemable;
-    }
-
-    public function hasExpired(): bool
-    {
-        return $this->has_expired;
     }
 
     /**
@@ -180,7 +167,7 @@ class DiscountInstrumentFixture implements DiscountInstrument
      */
     public function getDiscountedPrice(): int
     {
-        return $this->price;
+        return $this->discounted_price;
     }
 
     /**
@@ -229,23 +216,9 @@ class DiscountInstrumentFixture implements DiscountInstrument
         return $this;
     }
 
-    public function setIsActive(bool $is_active): self
-    {
-        $this->is_active = $is_active;
-
-        return $this;
-    }
-
     public function setIsRedeemable(bool $is_redeemable): self
     {
         $this->is_redeemable = $is_redeemable;
-
-        return $this;
-    }
-
-    public function setHasExpired(bool $has_expired): self
-    {
-        $this->has_expired = $has_expired;
 
         return $this;
     }
@@ -291,9 +264,9 @@ class DiscountInstrumentFixture implements DiscountInstrument
     /**
      * @return self
      */
-    public function setPrice(?int $price): self
+    public function setDiscountedPrice(int $discounted_price): self
     {
-        $this->price = $price;
+        $this->discounted_price = $discounted_price;
 
         return $this;
     }

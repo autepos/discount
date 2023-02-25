@@ -249,21 +249,6 @@ class DiscountProcessorTest extends TestCase
         $this->assertCount(0, $discountLineList);
     }
 
-    // Test that discount cannot be applied with an expired discount instrument.
-    public function testCalculateExpiredDiscountInstrument()
-    {
-        $processor = new BaseDiscountProcessorFixture();
-        $discountableDevice = new DiscountableDeviceFixture();
-        $discountInstrument = new DiscountInstrumentFixture();
-
-        $discountInstrument->setHasExpired(true);
-        $processor->addDiscountableDevice($discountableDevice);
-        $processor->addDiscountInstrument($discountInstrument);
-        $discountLineList = $processor->calculate();
-
-        $this->assertCount(0, $discountLineList);
-    }
-
     // Test that discount cannot be applied with a discount instrument that is not redeemable.
     public function testCalculateNotRedeemableDiscountInstrument()
     {
@@ -272,21 +257,6 @@ class DiscountProcessorTest extends TestCase
         $discountInstrument = new DiscountInstrumentFixture();
 
         $discountInstrument->setIsRedeemable(false);
-        $processor->addDiscountableDevice($discountableDevice);
-        $processor->addDiscountInstrument($discountInstrument);
-        $discountLineList = $processor->calculate();
-
-        $this->assertCount(0, $discountLineList);
-    }
-
-    // Test that discount cannot be applied with a discount instrument that is not active.
-    public function testCalculateNotActiveDiscountInstrument()
-    {
-        $processor = new BaseDiscountProcessorFixture();
-        $discountableDevice = new DiscountableDeviceFixture();
-        $discountInstrument = new DiscountInstrumentFixture();
-
-        $discountInstrument->setIsActive(false);
         $processor->addDiscountableDevice($discountableDevice);
         $processor->addDiscountInstrument($discountInstrument);
         $discountLineList = $processor->calculate();

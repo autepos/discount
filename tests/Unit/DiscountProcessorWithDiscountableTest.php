@@ -490,7 +490,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         );
         $priceToPay = 2000;
         $discountInstrument->setUnitQuantity(3);
-        $discountInstrument->setPrice($priceToPay);
+        $discountInstrument->setDiscountedPrice($priceToPay);
 
         //
         $processor->addDiscountableDevice($discountableDevice);

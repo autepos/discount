@@ -55,23 +55,13 @@ interface DiscountInstrument
     public function getPercentOff(): float;
 
     /**
-     * Check if discount instrument is valid
-     *
-     * @return bool
-     */
-    public function isActive(): bool;
-
-    /**
      * Check if discount instrument is redeemable
      */
-    public function isRedeemable(string|int $user_id = null, int $order_id = null): bool;
-
-    /**
-     * Check if discount instrument has expired
-     *
-     * @return bool
-     */
-    public function hasExpired(): bool;
+    public function isRedeemable(
+            int|string $user_id = null,
+            int|string $order_id = null,
+            int|string $admin_id = null,
+            int|string $tenant_id = null): bool;
 
     /**
      * Get the minimum amount the instrument is applicable to
