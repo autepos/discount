@@ -17,12 +17,14 @@ class DiscountLineItem
      * @param  DiscountLine  $discountLine
      * @param  DiscountInstrument  $discountInstrument
      * @param  int  $amount The discount amount resulting from this item.
+     * @param  int  $unitQuantity The number of items grouped together in unit_quantity_group as one unit for the discount.
      * @param  string|null  $unitQuantityGroup The tag identifying the items grouped together in unit_quantity as one unit for the discount.
      */
     public function __construct(
         protected DiscountLine $discountLine,
         protected DiscountInstrument $discountInstrument,
         protected int $amount = 0,
+        protected int $unitQuantity = 1,
         protected ?string $unitQuantityGroup = 'none',
         protected ?int $orderId = null,
         protected int|string|null $userId = null,
@@ -90,6 +92,16 @@ class DiscountLineItem
     public function isRedeemed()
     {
         return $this->redeemed;
+    }
+
+    /**
+     * Get the value of unitQuantity
+     *
+     * @return int
+     */
+    public function getUnitQuantity(): int
+    {
+        return $this->unitQuantity;
     }
 
     /**

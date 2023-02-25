@@ -44,6 +44,7 @@ class DiscountLine
     public function addItem(
             DiscountInstrument $discountInstrument,
             int $amount = 0,
+            int $unit_quantity = 1,
             string|null $unit_quantity_group = 'none',
             ?int $order_id = null,
             int|string|null $user_id = null,
@@ -55,6 +56,7 @@ class DiscountLine
             $this,
             $discountInstrument,
             $amount,
+            $unit_quantity,
             $unit_quantity_group,
             $order_id,
             $user_id,

@@ -356,7 +356,7 @@ abstract class DiscountProcessor
         foreach ($discountableDeviceLinesChunks as $discountableDeviceLinesChunk) {
             $unit_quantity_group = $counter.'_of_'.$unit_quantities;
             $counter++;
-            $this->apply($discountInstrument, $discountableDevice, $discountableDeviceLinesChunk, $unit_quantity_group);
+            $this->apply($discountInstrument, $discountableDevice, $discountableDeviceLinesChunk, $unit_quantity, $unit_quantity_group);
         }
     }
 
@@ -366,12 +366,13 @@ abstract class DiscountProcessor
      * @param  DiscountInstrument  $discountInstrument
      * @param  DiscountableDevice  $discountableDevice
      * @param  array<int,DiscountableDeviceLine>  $discountableDeviceLines
+     * @param  int  $unit_quantity This is the number of items that are discounted together
      * @param  string  $unit_quantity_group This is the tag that identifies a group/chunk that are discounted together
      * @return void
      *
      * @throws \InvalidArgumentException
      */
-    protected function apply(DiscountInstrument $discountInstrument, DiscountableDevice $discountableDevice, array $discountableDeviceLines = [], string $unit_quantity_group = 'none')
+    protected function apply(DiscountInstrument $discountInstrument, DiscountableDevice $discountableDevice, array $discountableDeviceLines = [], int $unit_quantity = 1, string $unit_quantity_group = 'none')
     {
         // First validate inputs
         foreach ($discountableDeviceLines as $discountableDeviceLine) {
@@ -474,6 +475,7 @@ abstract class DiscountProcessor
             $discountLine->addItem(
                 $discountInstrument,
                 $discount_shares[$discountLine->getHash()],
+                $unit_quantity,
                 $unit_quantity_group,
                 $this->orderId,
                 $this->userId,
