@@ -5,16 +5,18 @@ namespace Autepos\Discount\Contracts;
 /**
  * An item, such as an order  line item, that can directly
  * receive amount deduction.
+ * Example candidates are an order/cart line item.
  */
 interface DiscountableDeviceLine
 {
     /**
-     * Get the id.
+     * Get the id of the discountable device line.
      */
     public function getDiscountableDeviceLineIdentifier(): ?int;
 
     /**
-     * Get the type.    */
+     * Get the type of the discountable device line.
+     * */
     public function getDiscountableDeviceLineType(): string;
 
     /**
@@ -23,11 +25,17 @@ interface DiscountableDeviceLine
     public function getDiscountable(): Discountable;
 
     /**
-     * The subtotal of a discountable device.
-     * This is the amount that will be discounted so should be a line item subtotal
-     * before discount and tax.
+     * The quantity of a discountable device line.
      *
      * @return int
      */
-    public function getDiscountableDeviceLineSubtotal(): int;
+    public function getDiscountableDeviceLineQuantity(): int;
+
+    /**
+     * The amount for one discountable device line.
+     * This is the amount to which discount will be applied.
+     *
+     * @return int
+     */
+    public function getDiscountableDeviceLineAmount(): int;
 }

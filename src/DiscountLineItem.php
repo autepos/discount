@@ -14,24 +14,47 @@ class DiscountLineItem
     protected $redeemed = false;
 
     /**
-     * @param  DiscountLine  $discountLine
+     * The tag identifying the items grouped together in unit_quantity as one unit
+     * for the discount.
+     */
+    protected string $unitQuantityGroup = 'none';
+
+    /**
+     * Within group(i.e $unitQuantityGroup) unique number. E.g. if there are 2 items
+     * in the group, the first item will have $unitQuantityGroupNumber = 1 and the
+     * second item will have $unitQuantityGroupNumber = 2. This is particularly
+     * useful to identify a discount that is part of a group applied as one
+     * unit. An example use case is to update the number of times redeemed
+     * of a discount instrument only once regardless of how many discounts
+     * recorded in the group as one unit.
+     *
+     * @var int
+     */
+    protected int $unitQuantityGroupNumber = 1;
+
+    /**
+     * @param  DiscountLineAgent  $agent
      * @param  DiscountInstrument  $discountInstrument
      * @param  int  $amount The discount amount resulting from this item.
      * @param  int  $unitQuantity The number of items grouped together in unit_quantity_group as one unit for the discount.
-     * @param  string|null  $unitQuantityGroup The tag identifying the items grouped together in unit_quantity as one unit for the discount.
+     * @param  string  $unitQuantityGroup Unit quantity group.
+     * @param  int  $unitQuantityGroupNumber Unit quantity group number.
      */
     public function __construct(
-        protected DiscountLine $discountLine,
+        protected DiscountLineAgent $agent,
         protected DiscountInstrument $discountInstrument,
         protected int $amount = 0,
         protected int $unitQuantity = 1,
-        protected ?string $unitQuantityGroup = 'none',
-        protected ?int $orderId = null,
+        string $unitQuantityGroup = 'none',
+        int $unitQuantityGroupNumber = 1,
+        protected int|string|null $orderId = null,
         protected int|string|null $userId = null,
         protected int|string|null $adminId = null,
         protected int|string|null $tenantId = null,
         protected string $processor = ''
     ) {
+        $this->unitQuantityGroup = $unitQuantityGroup;
+        $this->unitQuantityGroupNumber = $unitQuantityGroupNumber;
     }
 
     /**
@@ -55,7 +78,7 @@ class DiscountLineItem
      */
     public function getDiscountLine()
     {
-        return $this->discountLine;
+        return $this->agent->getDiscountLine();
     }
 
     /**
@@ -63,7 +86,7 @@ class DiscountLineItem
      */
     public function setDiscountLine($discountLine): static
     {
-        $this->discountLine = $discountLine;
+        $this->agent->setDiscountLine($discountLine);
 
         return $this;
     }
@@ -107,19 +130,29 @@ class DiscountLineItem
     /**
      * Get the value of unitQuantityGroup
      *
-     * @return ?string
+     * @return string
      */
-    public function getUnitQuantityGroup(): ?string
+    public function getUnitQuantityGroup(): string
     {
         return $this->unitQuantityGroup;
     }
 
     /**
+     * Get the value of unitQuantityGroupNumber
+     *
+     * @return int
+     */
+    public function getUnitQuantityGroupNumber(): int
+    {
+        return $this->unitQuantityGroupNumber;
+    }
+
+    /**
      * Get the value of orderId
      *
-     * @return ?int
+     * @return int|string|null
      */
-    public function getOrderId(): ?int
+    public function getOrderId(): int|string|null
     {
         return $this->orderId;
     }
@@ -163,4 +196,12 @@ class DiscountLineItem
     {
         return $this->processor;
     }
+
+     /**
+      * Get the value of agent
+      */
+     public function getAgent()
+     {
+         return $this->agent;
+     }
 }

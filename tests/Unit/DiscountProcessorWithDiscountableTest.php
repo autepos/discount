@@ -581,6 +581,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
                 function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $order_id, $user_id, $admin_id, $tenant_id, $processor) {
                     $this->assertEquals($expected, $discountLineItem->getAmount());
                     $this->assertEquals('1_of_1', $discountLineItem->getUnitQuantityGroup());
+                    $this->assertEquals(1, $discountLineItem->getUnitQuantityGroupNumber());
                     $this->assertEquals($discountableDevice, $discountLineItem->getDiscountLine()->getDiscountableDevice());
                     $this->assertEquals(
                         $discountableDevice->getDiscountableDeviceLines()[0],

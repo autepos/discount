@@ -5,6 +5,7 @@ namespace Autepos\Discount\Contracts;
 /**
  * An item, such as an order  that can directly
  * receive amount deduction.
+ * Example candidates are an order/cart.
  */
 interface DiscountableDevice
 {

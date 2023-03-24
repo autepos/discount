@@ -4,6 +4,7 @@ namespace Autepos\Discount\Contracts;
 
 /**
  * An item to which discount can be applied.
+ * An example candidate is a product.
  */
 interface Discountable
 {

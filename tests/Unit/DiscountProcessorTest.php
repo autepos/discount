@@ -6,6 +6,7 @@ use Autepos\Discount\DiscountLineItem;
 use Autepos\Discount\DiscountTypes;
 use Autepos\Discount\Tests\Unit\Fixtures\BaseDiscountProcessorFixture;
 use Autepos\Discount\Tests\Unit\Fixtures\DiscountableDeviceFixture;
+use Autepos\Discount\Tests\Unit\Fixtures\DiscountableDeviceLineFixture;
 use Autepos\Discount\Tests\Unit\Fixtures\DiscountInstrumentFixture;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -301,6 +302,38 @@ class DiscountProcessorTest extends TestCase
         $this->assertEquals($subtotal, $discountLineList->amount());
     }
 
+    // Test that the number of times discount is applied is limited to the number of times the discount is redeemable.
+    public function testTimesDiscountCanBeAppliedIsLimitedToTimesDiscountIsRedeemable()
+    {
+        $quantity = 4;
+        $max_times_redeemable = 3;
+        $subtotal = 1000;
+
+        $processor = new BaseDiscountProcessorFixture();
+
+        $discountableDeviceLine = new DiscountableDeviceLineFixture(1, 'type1', null, 1000, $quantity);
+
+        $discountableDevice = new DiscountableDeviceFixture(1, null, $subtotal);
+
+        $discountableDevice->setDiscountableDeviceLines([$discountableDeviceLine]);
+
+        $discountInstrumentPartialMock = Mockery::mock(DiscountInstrumentFixture::class)->makePartial();
+        $discountInstrumentPartialMock->shouldReceive('getDiscountType')
+            ->andReturn(DiscountTypes::AMOUNT_OFF);
+        $discountInstrumentPartialMock->shouldReceive('isRedeemable')
+        ->atLeast(1)
+        ->andReturnUsing(function ($count) use ($max_times_redeemable) {
+            return $count <= $max_times_redeemable;
+        });
+
+        $processor->addDiscountableDevice($discountableDevice);
+        $processor->addDiscountInstrument($discountInstrumentPartialMock);
+        $discountLineList = $processor->calculate();
+
+        $discountLine = current($discountLineList->all());
+        $this->assertCount($max_times_redeemable, $discountLine->allWithAmount());
+    }
+
     // Test that discount instrument can be redeemed.
     public function testRedeemDiscountInstrument()
     {
@@ -329,11 +362,11 @@ class DiscountProcessorTest extends TestCase
 
         //
         $discountInstrumentPartialMock->shouldReceive('redeem')
-            ->once()
             ->withArgs(
                 function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $order_id, $user_id, $admin_id, $tenant_id, $processor) {
                     $this->assertEquals($expected, $discountLineItem->getAmount());
                     $this->assertEquals('1_of_1', $discountLineItem->getUnitQuantityGroup());
+                    $this->assertEquals(1, $discountLineItem->getUnitQuantityGroupNumber());
                     $this->assertEquals($discountableDevice, $discountLineItem->getDiscountLine()->getDiscountableDevice());
                     $this->assertEquals(
                         $discountableDevice->getDiscountableDeviceLines()[0],

@@ -115,19 +115,19 @@ class DiscountLineList implements IteratorAggregate, Countable
     }
 
     /**
-     * Get all items with none-zero amount as an array.
+     * Get all items with nonzero amount as an array.
      *
      * @return array<string,DiscountLine>
      */
     public function allWithAmount(): array
     {
         return array_filter($this->all(), function (DiscountLine $discountLine) {
-            return $discountLine->amount() > 0;
+            return $discountLine->prune()->amount() > 0;
         });
     }
 
     /**
-     * Prune all items with zero amount mutating the collection instance in place.
+     * Prune all items with nonzero amount mutating the collection instance in place.
      *
      * @return static $this
      */
@@ -236,14 +236,15 @@ class DiscountLineList implements IteratorAggregate, Countable
     /**
      * Group items by discount instrument.
      *
-     * @return array<mixed,array<DiscountLine>> The key is the discount instrument identifier.
+     * @return array<mixed,array<DiscountLine>> The key is the discount instrument identifier. NOTE: The discount lines
+     *                                        return by this method should only be used for reading.
      */
     public function groupByDiscountInstrumentAsArray(): array
     {
         $discountLines = [];
         foreach ($this->items as $item) {
             foreach ($item->groupByDiscountInstrument() as $discountLine) {
-                $discountLineItems = $discountLine->getItems();
+                $discountLineItems = $discountLine->items();
                 if (count($discountLineItems) === 0) {
                     continue;
                 }

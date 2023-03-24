@@ -13,7 +13,8 @@ class DiscountableDeviceLineFixture implements DiscountableDeviceLine
         public int $id = 1,
         public ?string $type = null,
         public ?Discountable $discountable = null,
-        public int $subtotal = 1001
+        public int $subtotal = 1001,
+        public int $quantity = 1,
 
     ) {
         if (is_null($this->type)) {
@@ -40,8 +41,13 @@ class DiscountableDeviceLineFixture implements DiscountableDeviceLine
         return $this->discountable;
     }
 
-    public function getDiscountableDeviceLineSubtotal(): int
+    public function getDiscountableDeviceLineAmount(): int
     {
         return $this->subtotal;
+    }
+
+    public function getDiscountableDeviceLineQuantity(): int
+    {
+        return $this->quantity;
     }
 }

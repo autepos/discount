@@ -267,7 +267,7 @@ abstract class DiscountProcessor
      */
     protected function isValid(DiscountInstrument $discountInstrument): bool
     {
-        return $discountInstrument->isRedeemable($this->userId, $this->orderId, $this->adminId, $this->tenantId);
+        return $discountInstrument->isRedeemable(1, $this->userId, $this->orderId, $this->adminId, $this->tenantId);
     }
 
     /**
@@ -319,6 +319,9 @@ abstract class DiscountProcessor
             }
         }
 
+        // Replicate the discountable device lines by their quantities.
+        $discountableDeviceLines = $this->replicateDiscountableDeviceLines(...$discountableDeviceLines);
+
         // Check the minimum quantity criteria.
         if (count($discountableDeviceLines) < $discountInstrument->getMinQuantity()) {
             return;
@@ -342,7 +345,7 @@ abstract class DiscountProcessor
             array_pop($discountableDeviceLinesChunks);
         }
 
-        // Return if there are no chunks.
+        // Return if there are no chunk.
         if (empty($discountableDeviceLinesChunks)) {
             return;
         }
@@ -350,6 +353,20 @@ abstract class DiscountProcessor
         // Limit the number of chunks to the maximum quantity.
         if ($discountInstrument->getMaxQuantity() !== null) {
             $discountableDeviceLinesChunks = array_slice($discountableDeviceLinesChunks, 0, $discountInstrument->getMaxQuantity());
+        }
+
+        // Limit the number of chunks to the number of times the discount can be redeemed.
+        $discountableDeviceLinesChunks = array_slice(
+            $discountableDeviceLinesChunks,
+            0,
+            $this->timesRedeemable($discountInstrument, count($discountableDeviceLinesChunks))
+        );
+
+        // Again, return if there are no chunk. Although there should be at least one
+        // chunk since a check for one count of redeemability has been made before
+        // this method is called in the first place.
+        if (empty($discountableDeviceLinesChunks)) {
+            return;
         }
 
         // Apply discount to chunks.
@@ -376,7 +393,7 @@ abstract class DiscountProcessor
      */
     protected function apply(DiscountInstrument $discountInstrument, DiscountableDevice $discountableDevice, array $discountableDeviceLines = [], int $unit_quantity = 1, string $unit_quantity_group = 'none')
     {
-        // First validate inputs
+        // First validate inputs, it's easier to debug.
         foreach ($discountableDeviceLines as $discountableDeviceLine) {
             if (! is_a($discountableDeviceLine, DiscountableDeviceLine::class)) {
                 throw new \InvalidArgumentException('Argument, $discountableDeviceLines 
@@ -384,10 +401,13 @@ abstract class DiscountProcessor
             }
         }
 
+        // Group the discountable device lines by their type and id.
+        $discountableDeviceLinesGroups = $this->groupDiscountableDeviceLines(...$discountableDeviceLines);
+
         /**
-         * @var  array<int,\Autepos\Discount\DiscountLine> $discountLines
+         * @var  array<int,\Autepos\Discount\DiscountLineAgent> $discountLineAgents
          */
-        $discountLines = [];
+        $discountLineAgents = [];
 
         /**
          * @var array<string,int> $discount_shares This is the share of the discount
@@ -396,23 +416,28 @@ abstract class DiscountProcessor
          */
         $discount_shares = [];
 
-        //
-        $subtotal_remainder = 0;
+        // Applying the discount as unit/whole.
+        $remainders = [];
+        foreach ($discountableDeviceLinesGroups as $discountableDeviceLinesGroup) {
+            $discountableDeviceLine = $discountableDeviceLinesGroup[0];
+            $agents = $this->discountLineList->find($discountableDevice, $discountableDeviceLine)
+            ->selectAgents(count($discountableDeviceLinesGroup));
+            foreach ($agents as $agent) {
+                $key = $agent->hash();
+                $remainders[$key] = $agent->remainder();
+                $discountLineAgents[$key] = $agent;
+            }
+        }
 
         // Apply the discount to the discountableDeviceLines as a unit/whole.
         switch($discountInstrument->getDiscountType()) {
             case DiscountTypes::AMOUNT_OFF:
             case DiscountTypes::PERCENT_OFF:
-                // Applying the discount as unit/whole.
-                foreach ($discountableDeviceLines as $discountableDeviceLine) {
-                    $discountLine = $this->discountLineList->find($discountableDevice, $discountableDeviceLine);
-                    $subtotal_remainder += $discountLine->remainder();
-                    $discountLines[] = $discountLine;
-                }
-                $discount_amount = $this->off($subtotal_remainder, $discountInstrument);
+
+                $discount_amount = $this->off(\array_sum($remainders), $discountInstrument);
 
                 // Share the unit/whole discount.
-                $discount_shares = $this->tricklingShare('down', $discount_amount, ...$discountLines);
+                $discount_shares = $this->tricklingShare('down', $discount_amount, $remainders);
 
                 break;
             case DiscountTypes::BUY_N_FOR_PRICE_OF_M:
@@ -423,13 +448,7 @@ abstract class DiscountProcessor
                 // Step 5. Then share the discount amount to the discountable device lines using trickling strategy.
 
                 // Step 1.
-                $remainders = [];
-
-                foreach ($discountableDeviceLines as $discountableDeviceLine) {
-                    $discountLine = $this->discountLineList->find($discountableDevice, $discountableDeviceLine);
-                    $remainders[] = $discountLine->remainder();
-                    $discountLines[] = $discountLine;
-                }
+                // Already done above.
 
                 // Step 2.
                 $biggest_remainder = \max($remainders);
@@ -441,7 +460,7 @@ abstract class DiscountProcessor
                 $discount_amount = \array_sum($remainders) - $new_total_remainder;
 
                 // Step 5.
-                $discount_shares = $this->tricklingShare('up', $discount_amount, ...$discountLines);
+                $discount_shares = $this->tricklingShare('up', $discount_amount, $remainders);
 
                 break;
             case DiscountTypes::BUY_N_FOR_PRICE:
@@ -451,13 +470,7 @@ abstract class DiscountProcessor
                 // Step 4. Then share the discount amount to the discountable device lines using trickling strategy.
 
                 // Step 1.
-                $remainders = [];
-
-                foreach ($discountableDeviceLines as $discountableDeviceLine) {
-                    $discountLine = $this->discountLineList->find($discountableDevice, $discountableDeviceLine);
-                    $remainders[] = $discountLine->remainder();
-                    $discountLines[] = $discountLine;
-                }
+                // Already done above.
 
                 // Step 2.
                 $new_total_remainder = $discountInstrument->getDiscountedPrice();
@@ -466,19 +479,21 @@ abstract class DiscountProcessor
                 $discount_amount = \max(0, \array_sum($remainders) - $new_total_remainder);
 
                 // Step 4.
-                $discount_shares = $this->tricklingShare('up', $discount_amount, ...$discountLines);
+                $discount_shares = $this->tricklingShare('up', $discount_amount, $remainders);
                 break;
             default:
                 throw new \InvalidArgumentException('Invalid discount type.');
         }
 
         // Record the discount
-        foreach ($discountLines as $discountLine) {
-            $discountLine->addItem(
+        $unit_quantity_group_number = 0;
+        foreach ($discountLineAgents as $hash => $discountLineAgent) {
+            $discountLineAgent->addItem(
                 $discountInstrument,
-                $discount_shares[$discountLine->getHash()],
+                $discount_shares[$hash],
                 $unit_quantity,
                 $unit_quantity_group,
+                ++$unit_quantity_group_number,
                 $this->orderId,
                 $this->userId,
                 $this->adminId,
@@ -498,6 +513,63 @@ abstract class DiscountProcessor
         foreach ($discountableDevice->getDiscountableDeviceLines() as $discountableDeviceLine) {
             $this->discountLineList->findOrAdd($discountableDevice, $discountableDeviceLine);
         }
+    }
+
+    /**
+     * Replicate the discountable device lines by their quantities.
+     * For example, if a discountable device line has a quantity of 3, then it will
+     * be replicated 3 times in the returned array.
+     *
+     * @return array<DiscountableDeviceLine>
+     */
+    private function replicateDiscountableDeviceLines(DiscountableDeviceLine ...$discountableDeviceLines): array
+    {
+        $replicatedDiscountableDeviceLines = [];
+
+        foreach ($discountableDeviceLines as $discountableDeviceLine) {
+            $quantity = $discountableDeviceLine->getDiscountableDeviceLineQuantity();
+
+            for ($i = 0; $i < $quantity; $i++) {
+                $replicatedDiscountableDeviceLines[] = $discountableDeviceLine;
+            }
+        }
+
+        return $replicatedDiscountableDeviceLines;
+    }
+
+    /**
+     * Count the number of times a discountable a discount instrument is redeemable.
+     *
+     * @param  int  $times_requested The number of times the discount instrument is requested to be redeemed.
+     */
+    protected function timesRedeemable(DiscountInstrument $discountInstrument, int $times_requested): int
+    {
+        $times_redeemable = 0;
+        for ($i = 1; $i <= $times_requested; $i++) {
+            if ($discountInstrument->isRedeemable($i, $this->userId, $this->orderId, $this->adminId, $this->tenantId)) {
+                $times_redeemable++;
+            } else {
+                break;
+            }
+        }
+
+        return $times_redeemable;
+    }
+
+    /**
+     * Group the discountable device lines by their type and id.
+     *
+     * @return array<string,array<DiscountableDeviceLine>> The key of the outer array is the type_id of the discountable device line.
+     */
+    private function groupDiscountableDeviceLines(DiscountableDeviceLine ...$discountableDeviceLines): array
+    {
+        $discountableDeviceLinesGroup = [];
+
+        foreach ($discountableDeviceLines as $discountableDeviceLine) {
+            $discountableDeviceLinesGroup[$discountableDeviceLine->getDiscountableDeviceLineType().'_'.$discountableDeviceLine->getDiscountableDeviceLineIdentifier()][] = $discountableDeviceLine;
+        }
+
+        return $discountableDeviceLinesGroup;
     }
 
     /**
@@ -556,7 +628,7 @@ abstract class DiscountProcessor
     {
         $subtotal = 0;
         foreach ($discountableDevice->getDiscountableDeviceLines() as $discountableDeviceLine) {
-            $subtotal += $discountableDeviceLine->getDiscountableDeviceLineSubtotal();
+            $subtotal += $discountableDeviceLine->getDiscountableDeviceLineAmount() * $discountableDeviceLine->getDiscountableDeviceLineQuantity();
         }
 
         return $subtotal;
@@ -585,24 +657,18 @@ abstract class DiscountProcessor
      *
      * @param  string  $strategy 'up' or 'down'.
      * @param  int  $amount
-     * @param ...DiscountLine $discountLines
+     * @param  array<string,int>  $capacities An array of discount line hash=>capacity. When capacity is the total amount that can be distributed to the corresponding discount line.
      * @return array<string,int> An array of discount line hash=>amount.
      */
-    protected function tricklingShare(string $strategy, int $amount, DiscountLine ...$discountLines): array
+    protected function tricklingShare(string $strategy, int $amount, $capacities): array
     {
         $distributor = new AmountDistributor();
 
-        // Get remainder of each discount line
-        $remainders = [];
-        foreach ($discountLines as $discountLine) {
-            $remainders[$discountLine->getHash()] = $discountLine->remainder();
-        }
-
         //
         if ($strategy == 'up') {
-            $distributor->trickleUp($amount, $remainders);
+            $distributor->trickleUp($amount, $capacities);
         } else {
-            $distributor->trickleDown($amount, $remainders);
+            $distributor->trickleDown($amount, $capacities);
         }
 
         return $distributor->getDistributedAmounts();

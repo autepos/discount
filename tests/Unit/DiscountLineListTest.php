@@ -74,8 +74,12 @@ class DiscountLineListTest extends TestCase
      */
     private function createDiscountLineList(): DiscountLineList
     {
+        $quantity = 1;
+        $amount = 1000;
+        $discountableDeviceLine = new DiscountableDeviceLineFixture(1, 'type1', null, $amount, $quantity);
+
         // Create first discount line.
-        $discountLine1 = new DiscountLine('hash1', new DiscountableDeviceFixture());
+        $discountLine1 = new DiscountLine('hash1', new DiscountableDeviceFixture(), $discountableDeviceLine);
 
         // Make the discount line an instance mock.
         $discountLine1 = Mockery::mock($discountLine1);
@@ -85,9 +89,10 @@ class DiscountLineListTest extends TestCase
         $discountInstrument2 = new DiscountInstrumentFixture(2);
 
         // Add the discount line items to the discount line.
-        $discountLine1->addItem($discountInstrument1, 20);
-        $discountLine1->addItem($discountInstrument1, 10);
-        $discountLine1->addItem($discountInstrument2, 5);
+        $discountLine1Agent = $discountLine1->selectAgents()[0];
+        $discountLine1Agent->addItem($discountInstrument1, 20);
+        $discountLine1Agent->addItem($discountInstrument1, 10);
+        $discountLine1Agent->addItem($discountInstrument2, 5);
 
         // Get the grouped by discount instrument.
         $grouped1 = $discountLine1->groupByDiscountInstrument();
@@ -98,7 +103,7 @@ class DiscountLineListTest extends TestCase
         ->andReturn($grouped1);
 
         // Create a second discount line.
-        $discountLine2 = new DiscountLine('hash2', new DiscountableDeviceFixture());
+        $discountLine2 = new DiscountLine('hash2', new DiscountableDeviceFixture(), $discountableDeviceLine);
 
         // Make the discount line an instance mock.
         $discountLine2 = Mockery::mock($discountLine2);
@@ -107,9 +112,10 @@ class DiscountLineListTest extends TestCase
         $discountInstrument3 = new DiscountInstrumentFixture(3);
 
         // Add the discount line items to the discount line.
-        $discountLine2->addItem($discountInstrument1, 4);
-        $discountLine2->addItem($discountInstrument2, 3);
-        $discountLine2->addItem($discountInstrument3, 2);
+        $discountLine2Agent = $discountLine2->selectAgents()[0];
+        $discountLine2Agent->addItem($discountInstrument1, 4);
+        $discountLine2Agent->addItem($discountInstrument2, 3);
+        $discountLine2Agent->addItem($discountInstrument3, 2);
 
         // Get the grouped by discount instrument.
         $grouped2 = $discountLine2->groupByDiscountInstrument();
@@ -201,6 +207,10 @@ class DiscountLineListTest extends TestCase
     // Test that the discount amount for a discount instrument can be retrieved.
     public function testDiscountAmountCanBeRetrievedForDiscountInstrument()
     {
+        $quantity = 1;
+        $amount = 1000;
+        $discountableDeviceLine = new DiscountableDeviceLineFixture(1, 'type1', null, $amount, $quantity);
+
         // Create a discount line list.
         $discountLineList = new DiscountLineList;
 
@@ -208,21 +218,21 @@ class DiscountLineListTest extends TestCase
         $discountInstrument = new DiscountInstrumentFixture(1);
 
         // Create first discount line.
-        $discountLine1 = Mockery::mock(new DiscountLine('hash1', new DiscountableDeviceFixture()));
+        $discountLine1 = Mockery::mock(new DiscountLine('hash1', new DiscountableDeviceFixture(), $discountableDeviceLine));
         $discountLine1->shouldReceive('amountForDiscountInstrument')
         ->once()
                         ->with($discountInstrument)
                         ->andReturn(10);
 
         // Create second discount line.
-        $discountLine2 = Mockery::mock(new DiscountLine('hash2', new DiscountableDeviceFixture()));
+        $discountLine2 = Mockery::mock(new DiscountLine('hash2', new DiscountableDeviceFixture(), $discountableDeviceLine));
         $discountLine2->shouldReceive('amountForDiscountInstrument')
         ->once()
                         ->with($discountInstrument)
                         ->andReturn(20);
 
         // Create third discount line.
-        $discountLine3 = Mockery::mock(new DiscountLine('hash3', new DiscountableDeviceFixture()));
+        $discountLine3 = Mockery::mock(new DiscountLine('hash3', new DiscountableDeviceFixture(), $discountableDeviceLine));
         $discountLine3->shouldReceive('amountForDiscountInstrument')
         ->once()
                         ->with($discountInstrument)
