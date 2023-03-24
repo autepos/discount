@@ -657,7 +657,7 @@ abstract class DiscountProcessor
      *
      * @param  string  $strategy 'up' or 'down'.
      * @param  int  $amount
-     * @param  array<string,int>  $capacities An array of discount line hash=>capacity. When capacity is the total amount that can be distributed to the corresponding discount line.
+     * @param  array<string,int>  $capacities An array of discount line agent [hash=>capacity]. Where capacity is the total amount that can be distributed to the corresponding discount line.
      * @return array<string,int> An array of discount line hash=>amount.
      */
     protected function tricklingShare(string $strategy, int $amount, $capacities): array
