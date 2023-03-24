@@ -21,7 +21,7 @@ class DiscountableFixture implements Discountable
         }
     }
 
-    public function getDiscountableIdentifier(): ?int
+    public function getDiscountableIdentifier(): string|int|null
     {
         return $this->id;
     }

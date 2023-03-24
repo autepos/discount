@@ -10,7 +10,7 @@ interface Discountable
 {
     /**
      * Get the id of the discountable.    */
-    public function getDiscountableIdentifier(): ?int;
+    public function getDiscountableIdentifier(): string|int|null;
 
     /**
      * Get the type of the discountable.    */
