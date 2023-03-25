@@ -550,11 +550,13 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $user_id = 'user1';
         $admin_id = 'admin1';
         $tenant_id = 'tenant1';
+        $meta= ['meta1' => 'meta1'];
         $processor = new BaseDiscountProcessorFixture();
         $processor->setOrderId($order_id);
         $processor->setUserId($user_id);
         $processor->setAdminId($admin_id);
         $processor->setTenantId($tenant_id);
+        $processor->setMeta($meta);
 
         $discountable = new DiscountableFixture();
 
@@ -578,7 +580,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $discountInstrumentPartialMock->shouldReceive('redeem')
             ->once()
             ->withArgs(
-                function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $order_id, $user_id, $admin_id, $tenant_id, $processor) {
+                function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $order_id, $user_id, $admin_id, $tenant_id,$meta, $processor) {
                     $this->assertEquals($expected, $discountLineItem->getAmount());
                     $this->assertEquals('1_of_1', $discountLineItem->getUnitQuantityGroup());
                     $this->assertEquals(1, $discountLineItem->getUnitQuantityGroupNumber());
@@ -591,6 +593,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
                     $this->assertEquals($user_id, $discountLineItem->getUserId());
                     $this->assertEquals($admin_id, $discountLineItem->getAdminId());
                     $this->assertEquals($tenant_id, $discountLineItem->getTenantId());
+                    $this->assertEquals($meta, $discountLineItem->getMeta());
                     $this->assertEquals($processor->getProcessor(), $discountLineItem->getProcessor());
 
                     return true;

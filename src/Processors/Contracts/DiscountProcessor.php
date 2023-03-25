@@ -58,6 +58,12 @@ abstract class DiscountProcessor
     protected int|string|null $tenantId;
 
     /**
+     * Array of meta data.
+     * @var array
+     */
+    protected array $meta = [];
+
+    /**
      * Holds the result of the discount calculation. and allows for the
      * results to be persisted.
      *
@@ -73,12 +79,14 @@ abstract class DiscountProcessor
         int|string|null $userId = null,
         int|string|null $adminId = null,
         int|string|null $tenantId = null,
+        array $meta = []
     ) {
         // Initialise
         $this->orderId = $orderId;
         $this->userId = $userId;
         $this->adminId = $adminId;
         $this->tenantId = $tenantId;
+        $this->meta = $meta;
 
         // set discountable device if provided
         if (! is_null($discountableDevice)) {
@@ -177,6 +185,16 @@ abstract class DiscountProcessor
     }
 
     /**
+     *  Set the value of meta 
+     */
+    final public function setMeta(array $meta): static
+    {
+        $this->meta = $meta;
+
+        return $this;
+    }
+
+    /**
      * Get processor name.
      *
      * @return string
@@ -215,6 +233,7 @@ abstract class DiscountProcessor
         $this->setUserId(null);
         $this->setAdminId(null);
         $this->setTenantId(null);
+        $this->setMeta([]);
 
         return $this;
     }
@@ -498,6 +517,7 @@ abstract class DiscountProcessor
                 $this->userId,
                 $this->adminId,
                 $this->tenantId,
+                $this->meta,
                 $this->getProcessor()
             );
         }
@@ -792,5 +812,13 @@ abstract class DiscountProcessor
     public function getTenantId(): int|string|null
     {
         return $this->tenantId;
+    }
+
+    /**
+     *  Get the value of meta 
+     */
+    public function getMeta(): array
+    {
+        return $this->meta;
     }
 }

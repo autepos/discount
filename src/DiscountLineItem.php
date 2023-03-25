@@ -51,6 +51,7 @@ class DiscountLineItem
         protected int|string|null $userId = null,
         protected int|string|null $adminId = null,
         protected int|string|null $tenantId = null,
+        protected array $meta = [],
         protected string $processor = ''
     ) {
         $this->unitQuantityGroup = $unitQuantityGroup;
@@ -188,6 +189,16 @@ class DiscountLineItem
     }
 
     /**
+     * Get the value of meta
+     *
+     * @return array
+     */
+    public function getMeta(): array
+    {
+        return $this->meta;
+    }
+
+    /**
      * Get the value of processor
      *
      * @return string
@@ -197,11 +208,11 @@ class DiscountLineItem
         return $this->processor;
     }
 
-     /**
-      * Get the value of agent
-      */
-     public function getAgent()
-     {
-         return $this->agent;
-     }
+    /**
+     * Get the value of agent
+     */
+    public function getAgent()
+    {
+        return $this->agent;
+    }
 }

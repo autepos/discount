@@ -62,6 +62,7 @@ class DiscountLineAgent
         int|string|null $user_id = null,
         int|string|null $admin_id = null,
         int|string|null $tenant_id = null,
+        array $meta = [],
         string $processor = ''
     ): void {
         $discountLineItem = new DiscountLineItem(
@@ -75,6 +76,7 @@ class DiscountLineAgent
             $user_id,
             $admin_id,
             $tenant_id,
+            $meta,
             $processor
         );
 
