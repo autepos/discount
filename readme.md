@@ -11,7 +11,7 @@ A flexible discounting library for PHP with zero dependency. It is typically use
     - Fixed amount
     - BOGO / Buy N get M free / Buy N for the Price of M
     - Buy N at a price
-- Discount stacking: multiple discounts can be applied to a single item.
+- Discount stacking: any type/multiple discounts can be applied to a single/multiple items. Zero limitation.
 - Restricting discounts:
     - to specific items
     - to specific user/order
@@ -50,7 +50,7 @@ $processor->addDiscountableDevice($discountableDevice)
 $discountLineList = $processor->calculate();
 
 // Get the discount amount
-$discountAmount = $discountLineList->getAmount();
+$discountAmount = $discountLineList->amount();
 
 // Persist the discount
 $discountLineList->redeem();
