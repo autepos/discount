@@ -546,16 +546,9 @@ class DiscountProcessorWithDiscountableTest extends TestCase
     // Test that discount instrument can be redeemed.
     public function testRedeemDiscountInstrument()
     {
-        $order_id = 1;
-        $user_id = 'user1';
-        $admin_id = 'admin1';
-        $tenant_id = 'tenant1';
-        $meta= ['meta1' => 'meta1'];
+        $meta = ['order_id' => 1, 'user_id' => 1, 'admin_id' => 1, 'tenant_id' => 1];
         $processor = new BaseDiscountProcessorFixture();
-        $processor->setOrderId($order_id);
-        $processor->setUserId($user_id);
-        $processor->setAdminId($admin_id);
-        $processor->setTenantId($tenant_id);
+
         $processor->setMeta($meta);
 
         $discountable = new DiscountableFixture();
@@ -580,7 +573,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
         $discountInstrumentPartialMock->shouldReceive('redeem')
             ->once()
             ->withArgs(
-                function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $order_id, $user_id, $admin_id, $tenant_id,$meta, $processor) {
+                function (DiscountLineItem $discountLineItem) use ($expected, $discountableDevice, $meta, $processor) {
                     $this->assertEquals($expected, $discountLineItem->getAmount());
                     $this->assertEquals('1_of_1', $discountLineItem->getUnitQuantityGroup());
                     $this->assertEquals(1, $discountLineItem->getUnitQuantityGroupNumber());
@@ -589,10 +582,7 @@ class DiscountProcessorWithDiscountableTest extends TestCase
                         $discountableDevice->getDiscountableDeviceLines()[0],
                         $discountLineItem->getDiscountLine()->getDiscountableDeviceLine()
                     );
-                    $this->assertEquals($order_id, $discountLineItem->getOrderId());
-                    $this->assertEquals($user_id, $discountLineItem->getUserId());
-                    $this->assertEquals($admin_id, $discountLineItem->getAdminId());
-                    $this->assertEquals($tenant_id, $discountLineItem->getTenantId());
+
                     $this->assertEquals($meta, $discountLineItem->getMeta());
                     $this->assertEquals($processor->getProcessor(), $discountLineItem->getProcessor());
 

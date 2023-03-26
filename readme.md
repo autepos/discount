@@ -14,7 +14,6 @@ A flexible discounting library for PHP with zero dependency. It is typically use
 - Discount stacking: any type/multiple discounts can be applied to a single/multiple items. Zero limitation.
 - Restricting discounts:
     - to specific items
-    - to specific user/order
     - to a minimum purchase amount
     - to minimum quantity
 - etc.

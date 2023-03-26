@@ -59,6 +59,7 @@ abstract class DiscountProcessor
 
     /**
      * Array of meta data.
+     *
      * @var array
      */
     protected array $meta = [];
@@ -75,17 +76,8 @@ abstract class DiscountProcessor
     public function __construct(
         ?DiscountInstrument $discountInstrument = null,
         ?DiscountableDevice $discountableDevice = null,
-        int|string|null $orderId = null,
-        int|string|null $userId = null,
-        int|string|null $adminId = null,
-        int|string|null $tenantId = null,
         array $meta = []
     ) {
-        // Initialise
-        $this->orderId = $orderId;
-        $this->userId = $userId;
-        $this->adminId = $adminId;
-        $this->tenantId = $tenantId;
         $this->meta = $meta;
 
         // set discountable device if provided
@@ -139,53 +131,7 @@ abstract class DiscountProcessor
     }
 
     /**
-     * Set the value of orderId
-     */
-    final public function setOrderId(int|string|null $orderId): static
-    {
-        $this->orderId = $orderId;
-
-        return $this;
-    }
-
-    /**
-     * Set the value of userId
-     *
-     * @param  int|string|null  $userId
-     */
-    final public function setUserId(int|string|null $userId): static
-    {
-        $this->userId = $userId;
-
-        return $this;
-    }
-
-    /**
-     * Set the value of adminId
-     *
-     * @param  int|string|null  $adminId
-     */
-    final public function setAdminId(int|string|null $adminId): static
-    {
-        $this->adminId = $adminId;
-
-        return $this;
-    }
-
-    /**
-     * Set the value of tenantId
-     *
-     * @param  int|string|null  $tenantId
-     */
-    final public function setTenantId(int|string|null $tenantId): static
-    {
-        $this->tenantId = $tenantId;
-
-        return $this;
-    }
-
-    /**
-     *  Set the value of meta 
+     *  Set the value of meta
      */
     final public function setMeta(array $meta): static
     {
@@ -229,10 +175,6 @@ abstract class DiscountProcessor
     {
         $this->resetDiscountInstruments();
         $this->resetDiscountableDevices();
-        $this->setOrderId(null);
-        $this->setUserId(null);
-        $this->setAdminId(null);
-        $this->setTenantId(null);
         $this->setMeta([]);
 
         return $this;
@@ -283,10 +225,13 @@ abstract class DiscountProcessor
 
     /**
      * Hook to check if the discount instrument is valid.
+     *
+     * @param  DiscountInstrument  $discountInstrument
+     * @param  int  $count Number of redemptions requested.
      */
-    protected function isValid(DiscountInstrument $discountInstrument): bool
+    protected function isValid(DiscountInstrument $discountInstrument, int $count = 1): bool
     {
-        return $discountInstrument->isRedeemable(1, $this->userId, $this->orderId, $this->adminId, $this->tenantId);
+        return $discountInstrument->isRedeemable($count, $this->meta);
     }
 
     /**
@@ -378,7 +323,7 @@ abstract class DiscountProcessor
         $discountableDeviceLinesChunks = array_slice(
             $discountableDeviceLinesChunks,
             0,
-            $this->timesRedeemable($discountInstrument, count($discountableDeviceLinesChunks))
+            $this->timesValid($discountInstrument, count($discountableDeviceLinesChunks))
         );
 
         // Again, return if there are no chunk. Although there should be at least one
@@ -513,12 +458,9 @@ abstract class DiscountProcessor
                 $unit_quantity,
                 $unit_quantity_group,
                 ++$unit_quantity_group_number,
-                $this->orderId,
-                $this->userId,
-                $this->adminId,
-                $this->tenantId,
-                $this->meta,
-                $this->getProcessor()
+                $this->getProcessor(),
+                $this->meta
+
             );
         }
     }
@@ -558,15 +500,15 @@ abstract class DiscountProcessor
     }
 
     /**
-     * Count the number of times a discountable a discount instrument is redeemable.
+     * Count the number of times a discountable a discount instrument is valid/redeemable.
      *
      * @param  int  $times_requested The number of times the discount instrument is requested to be redeemed.
      */
-    protected function timesRedeemable(DiscountInstrument $discountInstrument, int $times_requested): int
+    protected function timesValid(DiscountInstrument $discountInstrument, int $times_requested): int
     {
         $times_redeemable = 0;
         for ($i = 1; $i <= $times_requested; $i++) {
-            if ($discountInstrument->isRedeemable($i, $this->userId, $this->orderId, $this->adminId, $this->tenantId)) {
+            if ($this->isValid($discountInstrument, $i)) {
                 $times_redeemable++;
             } else {
                 break;
@@ -777,45 +719,7 @@ abstract class DiscountProcessor
     }
 
     /**
-     * Get the value of orderId
-     */
-    public function getOrderId(): int|string|null
-    {
-        return $this->orderId;
-    }
-
-    /**
-     * Get the value of userId
-     *
-     * @return int|string|null
-     */
-    public function getUserId(): int|string|null
-    {
-        return $this->userId;
-    }
-
-    /**
-     * Get the value of adminId
-     *
-     * @return int|string|null
-     */
-    public function getAdminId(): int|string|null
-    {
-        return $this->adminId;
-    }
-
-    /**
-     * Get the value of tenantId
-     *
-     * @return int|string|null
-     */
-    public function getTenantId(): int|string|null
-    {
-        return $this->tenantId;
-    }
-
-    /**
-     *  Get the value of meta 
+     *  Get the value of meta
      */
     public function getMeta(): array
     {

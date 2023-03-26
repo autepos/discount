@@ -47,12 +47,9 @@ class DiscountLineItem
         protected int $unitQuantity = 1,
         string $unitQuantityGroup = 'none',
         int $unitQuantityGroupNumber = 1,
-        protected int|string|null $orderId = null,
-        protected int|string|null $userId = null,
-        protected int|string|null $adminId = null,
-        protected int|string|null $tenantId = null,
-        protected array $meta = [],
-        protected string $processor = ''
+        protected string $processor = '',
+        protected array $meta = []
+
     ) {
         $this->unitQuantityGroup = $unitQuantityGroup;
         $this->unitQuantityGroupNumber = $unitQuantityGroupNumber;
@@ -119,6 +116,14 @@ class DiscountLineItem
     }
 
     /**
+     * Get the value of agent
+     */
+    public function getAgent()
+    {
+        return $this->agent;
+    }
+
+    /**
      * Get the value of unitQuantity
      *
      * @return int
@@ -149,56 +154,6 @@ class DiscountLineItem
     }
 
     /**
-     * Get the value of orderId
-     *
-     * @return int|string|null
-     */
-    public function getOrderId(): int|string|null
-    {
-        return $this->orderId;
-    }
-
-    /**
-     * Get the value of userId
-     *
-     * @return int|string|null
-     */
-    public function getUserId(): int|string|null
-    {
-        return $this->userId;
-    }
-
-    /**
-     * Get the value of adminId
-     *
-     * @return int|string|null
-     */
-    public function getAdminId(): int|string|null
-    {
-        return $this->adminId;
-    }
-
-    /**
-     * Get the value of tenantId
-     *
-     * @return int|string|null
-     */
-    public function getTenantId(): int|string|null
-    {
-        return $this->tenantId;
-    }
-
-    /**
-     * Get the value of meta
-     *
-     * @return array
-     */
-    public function getMeta(): array
-    {
-        return $this->meta;
-    }
-
-    /**
      * Get the value of processor
      *
      * @return string
@@ -209,10 +164,12 @@ class DiscountLineItem
     }
 
     /**
-     * Get the value of agent
+     * Get the value of meta
+     *
+     * @return array
      */
-    public function getAgent()
+    public function getMeta(): array
     {
-        return $this->agent;
+        return $this->meta;
     }
 }

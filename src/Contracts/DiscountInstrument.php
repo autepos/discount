@@ -65,10 +65,7 @@ interface DiscountInstrument
      */
     public function isRedeemable(
             int $count = 1,
-            int|string $user_id = null,
-            int|string $order_id = null,
-            int|string $admin_id = null,
-            int|string $tenant_id = null): bool;
+            array $meta = []): bool;
 
     /**
      * Get the minimum amount the instrument is applicable to

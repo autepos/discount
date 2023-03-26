@@ -58,12 +58,8 @@ class DiscountLineAgent
         int $unit_quantity = 1,
         string|null $unit_quantity_group = 'none',
         int $unit_quantity_group_number = 1,
-        ?int $order_id = null,
-        int|string|null $user_id = null,
-        int|string|null $admin_id = null,
-        int|string|null $tenant_id = null,
+        string $processor = '',
         array $meta = [],
-        string $processor = ''
     ): void {
         $discountLineItem = new DiscountLineItem(
             $this,
@@ -72,12 +68,9 @@ class DiscountLineAgent
             $unit_quantity,
             $unit_quantity_group,
             $unit_quantity_group_number,
-            $order_id,
-            $user_id,
-            $admin_id,
-            $tenant_id,
-            $meta,
-            $processor
+            $processor,
+            $meta
+
         );
 
         $this->add($discountLineItem);
