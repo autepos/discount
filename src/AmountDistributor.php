@@ -113,7 +113,7 @@ class AmountDistributor
         }
 
         if (array_sum($capacities) < $amount) {
-            throw new AmountDistributionException('Total amount of discount lines is less than the amount to be distributed.');
+            throw new AmountDistributionException('Total capacity is less than the amount to be distributed.');
         }
 
         $amountLeft = $amount;
